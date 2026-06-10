@@ -1,13 +1,12 @@
 export function calculateMatchScore(
-  matchedSkills: string[],
-  jdSkills: string[]
+  matchedWeight: number,
+  totalWeight: number
 ) {
-  if (jdSkills.length === 0) {
+  if (totalWeight === 0) {
     return 0;
   }
 
-  const score =
-    (matchedSkills.length / jdSkills.length) * 100;
-
-  return Math.round(score);
+  return Math.round(
+    (matchedWeight / totalWeight) * 100
+  );
 }

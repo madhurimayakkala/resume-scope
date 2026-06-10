@@ -29,39 +29,72 @@ export async function POST(request: Request) {
       MATCH SKILLS
     */
 
-    const {
-      matchedSkills,
-      missingSkills,
-      jdSkills,
-    } = matchSkills(
-      resumeText,
-      jobDescription
-    );
+      const {
+  matchedSkills,
+  missingSkills,
+  jdSkills,
 
+  matchedWeight,
+  totalWeight,
+
+  criticalGaps,
+  moderateGaps,
+  minorGaps,
+} = matchSkills(
+  resumeText,
+  jobDescription
+);
     /*
       CALCULATE SCORE
     */
 
-    const matchScore =
-      calculateMatchScore(
-        matchedSkills,
-        jdSkills
-      );
+const matchScore =
+  calculateMatchScore(
+    matchedWeight,
+    totalWeight
+  );
 
     /*
       GENERATE SUMMARY
     */
 
-    const aiExplanation = `
+   const aiExplanation = `
 Your resume matches ${matchScore}% of the detected ATS keywords.
 
 Matched skills:
 ${matchedSkills.join(", ") || "None"}
 
-Missing skills:
-${missingSkills.join(", ") || "None"}
+Critical gaps:
+${
+  criticalGaps
+    .map(
+      (gap) =>
+        `${gap.skill} (${gap.count} mentions)`
+    )
+    .join(", ") || "None"
+}
 
-Improving keyword alignment and strengthening project descriptions can improve ATS compatibility.
+Moderate gaps:
+${
+  moderateGaps
+    .map(
+      (gap) =>
+        `${gap.skill} (${gap.count} mentions)`
+    )
+    .join(", ") || "None"
+}
+
+Minor gaps:
+${
+  minorGaps
+    .map(
+      (gap) =>
+        `${gap.skill} (${gap.count} mentions)`
+    )
+    .join(", ") || "None"
+}
+
+Focus on the critical gaps first because they appear most frequently in the job description.
 `;
 
     /*
@@ -69,11 +102,20 @@ Improving keyword alignment and strengthening project descriptions can improve A
     */
 
     return NextResponse.json({
-      matchScore,
-      matchedSkills,
-      missingSkills,
-      aiExplanation,
-    });
+  matchScore,
+
+  matchedSkills,
+
+  missingSkills,
+
+  criticalGaps,
+
+  moderateGaps,
+
+  minorGaps,
+
+  aiExplanation,
+});
   } catch (error) {
     console.error(error);
 

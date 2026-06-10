@@ -2,12 +2,23 @@ import MatchScoreCard from "./MatchScoreCard";
 import RecommendationCard from "./RecommendationCard";
 import SkillBadge from "./SkillBadge";
 
+interface GapSkill {
+  skill: string;
+  count: number;
+}
+
 interface MatchResultsProps {
   score: number;
 
   matchedSkills: string[];
 
   missingSkills: string[];
+
+  criticalGaps: GapSkill[];
+
+  moderateGaps: GapSkill[];
+
+  minorGaps: GapSkill[];
 
   summary: string;
 }
@@ -16,8 +27,11 @@ export default function MatchResults({
   score,
   matchedSkills,
   missingSkills,
+  criticalGaps,
+  moderateGaps,
+  minorGaps,
   summary,
-}: MatchResultsProps) {
+}: MatchResultsProps){
   return (
     <section className="container-width py-20">
       <div className="max-w-6xl mx-auto">
@@ -88,31 +102,77 @@ export default function MatchResults({
               </div>
             </div>
 
-            {/* MISSING */}
+            {/* CRITICAL GAPS */}
 
-            <div className="mt-10">
-              <p className="text-sm uppercase tracking-[0.2em] text-muted mb-5">
-                Missing Skills
-              </p>
+<div className="mt-10">
+  <p className="text-sm uppercase tracking-[0.2em] text-red-400 mb-5">
+    Critical Gaps
+  </p>
 
-              <div className="flex flex-wrap gap-3">
-                {(missingSkills || []).length > 0 ? (
-                  (missingSkills || []).map(
-                    (skill) => (
-                      <SkillBadge
-                        key={skill}
-                        label={skill}
-                        muted
-                      />
-                    )
-                  )
-                ) : (
-                  <p className="text-secondary">
-                    No major missing skills detected.
-                  </p>
-                )}
-              </div>
-            </div>
+  <div className="flex flex-wrap gap-3">
+    {criticalGaps.length > 0 ? (
+      criticalGaps.map((gap) => (
+        <SkillBadge
+          key={gap.skill}
+          label={`${gap.skill} (${gap.count})`}
+          muted
+        />
+      ))
+    ) : (
+      <p className="text-secondary">
+        No critical gaps detected.
+      </p>
+    )}
+  </div>
+</div>
+
+{/* MODERATE GAPS */}
+
+<div className="mt-10">
+  <p className="text-sm uppercase tracking-[0.2em] text-yellow-400 mb-5">
+    Moderate Gaps
+  </p>
+
+  <div className="flex flex-wrap gap-3">
+    {moderateGaps.length > 0 ? (
+      moderateGaps.map((gap) => (
+        <SkillBadge
+          key={gap.skill}
+          label={`${gap.skill} (${gap.count})`}
+          muted
+        />
+      ))
+    ) : (
+      <p className="text-secondary">
+        No moderate gaps detected.
+      </p>
+    )}
+  </div>
+</div>
+
+{/* NICE TO HAVE */}
+
+<div className="mt-10">
+  <p className="text-sm uppercase tracking-[0.2em] text-blue-400 mb-5">
+    Nice To Have
+  </p>
+
+  <div className="flex flex-wrap gap-3">
+    {minorGaps.length > 0 ? (
+      minorGaps.map((gap) => (
+        <SkillBadge
+          key={gap.skill}
+          label={`${gap.skill} (${gap.count})`}
+          muted
+        />
+      ))
+    ) : (
+      <p className="text-secondary">
+        No minor gaps detected.
+      </p>
+    )}
+  </div>
+</div>
 
             {/* SUMMARY */}
 

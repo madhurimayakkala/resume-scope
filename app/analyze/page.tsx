@@ -7,10 +7,24 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import MatchResults from "@/components/MatchResults";
 import ResumeUpload from "@/components/ResumeUpload";
 
+interface GapSkill {
+  skill: string;
+  count: number;
+}
+
 interface AnalysisResult {
   score: number;
+
   matchedSkills: string[];
+
   missingSkills: string[];
+
+  criticalGaps: GapSkill[];
+
+  moderateGaps: GapSkill[];
+
+  minorGaps: GapSkill[];
+
   summary: string;
 }
 
@@ -96,30 +110,48 @@ export default function AnalyzePage() {
       /*
         SAFE RESULT HANDLING
       */
+setResult({
+  score:
+    typeof analysis.matchScore ===
+    "number"
+      ? analysis.matchScore
+      : 0,
 
-      setResult({
-        score:
-          typeof analysis.matchScore ===
-          "number"
-            ? analysis.matchScore
-            : 0,
+  matchedSkills: Array.isArray(
+    analysis.matchedSkills
+  )
+    ? analysis.matchedSkills
+    : [],
 
-        matchedSkills: Array.isArray(
-          analysis.matchedSkills
-        )
-          ? analysis.matchedSkills
-          : [],
+  missingSkills: Array.isArray(
+    analysis.missingSkills
+  )
+    ? analysis.missingSkills
+    : [],
 
-        missingSkills: Array.isArray(
-          analysis.missingSkills
-        )
-          ? analysis.missingSkills
-          : [],
+  criticalGaps: Array.isArray(
+    analysis.criticalGaps
+  )
+    ? analysis.criticalGaps
+    : [],
 
-        summary:
-          analysis.aiExplanation ||
-          "Analysis completed successfully.",
-      });
+  moderateGaps: Array.isArray(
+    analysis.moderateGaps
+  )
+    ? analysis.moderateGaps
+    : [],
+
+  minorGaps: Array.isArray(
+    analysis.minorGaps
+  )
+    ? analysis.minorGaps
+    : [],
+
+  summary:
+    analysis.aiExplanation ||
+    "Analysis completed successfully.",
+});
+
     } catch (error) {
       console.error(error);
 
@@ -224,24 +256,30 @@ export default function AnalyzePage() {
 
       {/* RESULTS */}
 
-      {!loading && result && (
-        <MatchResults
-          score={result.score}
-          matchedSkills={
-            result.matchedSkills || []
-          }
-          missingSkills={
-            result.missingSkills || []
-          }
-          summary={result.summary}
-        />
-      )}
-
+{!loading && result && (
+  <MatchResults
+    score={result.score}
+    matchedSkills={
+      result.matchedSkills || []
+    }
+    missingSkills={
+      result.missingSkills || []
+    }
+    criticalGaps={
+      result.criticalGaps || []
+    }
+    moderateGaps={
+      result.moderateGaps || []
+    }
+    minorGaps={
+      result.minorGaps || []
+    }
+    summary={result.summary}
+  />
+)}
       {/* FOOTER */}
 
       <footer className="container-width py-10 mt-20 border-t border-white/5 flex items-center justify-between text-sm text-muted">
-    
-
         <p>Madhurima Yakkala</p>
       </footer>
     </main>
