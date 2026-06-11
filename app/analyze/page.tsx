@@ -152,12 +152,15 @@ setResult({
     "Analysis completed successfully.",
 });
 
-    } catch (error) {
-      console.error(error);
+    }catch (error) {
+  console.error(error);
 
-      alert(
-        "Something went wrong while analyzing the resume."
-      );
+  if (error instanceof Error) {
+    alert(error.message);
+  } else {
+    alert("Unknown error");
+  }
+}
     } finally {
       setLoading(false);
     }
