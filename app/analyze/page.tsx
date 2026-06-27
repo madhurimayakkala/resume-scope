@@ -26,31 +26,38 @@ interface AnalysisResult {
 
 export default function AnalyzePage() {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
-
   const [jobDescription, setJobDescription] = useState("");
-
   const [loading, setLoading] = useState(false);
-
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleAnalyze = async () => {
-    if (!resumeFile || !jobDescription.trim()) {
-      alert(
-        "Please upload a resume and paste a job description."
-      );
+  async function handleAnalyze() {
+    setError(null);
 
+    if (!resumeFile) {
+      setError("Please upload a PDF resume before analyzing.");
+      return;
+    }
+
+    if (!jobDescription.trim()) {
+      setError("Please paste a job description before analyzing.");
+      return;
+    }
+
+    if (jobDescription.trim().split(/\s+/).length < 20) {
+      setError("The job description looks too short. Paste the full role details for accurate results.");
       return;
     }
 
     try {
       setLoading(true);
+      setResult(null);
 
       /*
         PARSE RESUME
       */
 
       const formData = new FormData();
-
       formData.append("resume", resumeFile);
 
       const parseResponse = await fetch("/api/parse-resume", {
@@ -59,10 +66,17 @@ export default function AnalyzePage() {
       });
 
       if (!parseResponse.ok) {
-        throw new Error("Failed to parse resume.");
+        const data = await parseResponse.json().catch(() => ({}));
+        throw new Error(data.error ?? "Failed to parse resume.");
       }
 
       const parsedData = await parseResponse.json();
+
+      if (!parsedData.text || parsedData.text.trim().length < 50) {
+        throw new Error(
+          "Could not extract text from this PDF. Try re-saving it as a standard PDF."
+        );
+      }
 
       /*
         ANALYZE RESUME
@@ -70,11 +84,7 @@ export default function AnalyzePage() {
 
       const analyzeResponse = await fetch("/api/analyze", {
         method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-        },
-
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           resumeText: parsedData.text,
           jobDescription,
@@ -82,7 +92,8 @@ export default function AnalyzePage() {
       });
 
       if (!analyzeResponse.ok) {
-        throw new Error("Failed to analyze resume.");
+        const data = await analyzeResponse.json().catch(() => ({}));
+        throw new Error(data.error ?? "Failed to analyze resume.");
       }
 
       const analysis = await analyzeResponse.json();
@@ -93,61 +104,46 @@ export default function AnalyzePage() {
 
       setResult({
         score:
-          typeof analysis.matchScore === "number"
-            ? analysis.matchScore
-            : 0,
-
+          typeof analysis.matchScore === "number" ? analysis.matchScore : 0,
         matchedSkills: Array.isArray(analysis.matchedSkills)
           ? analysis.matchedSkills
           : [],
-
         missingSkills: Array.isArray(analysis.missingSkills)
           ? analysis.missingSkills
           : [],
-
         criticalGaps: Array.isArray(analysis.criticalGaps)
           ? analysis.criticalGaps
           : [],
-
         moderateGaps: Array.isArray(analysis.moderateGaps)
           ? analysis.moderateGaps
           : [],
-
         minorGaps: Array.isArray(analysis.minorGaps)
           ? analysis.minorGaps
           : [],
-
-        summary:
-          analysis.aiExplanation ||
-          "Analysis completed successfully.",
-
+        summary: analysis.aiExplanation ?? "Analysis completed.",
         recommendations: Array.isArray(analysis.recommendations)
           ? analysis.recommendations
           : [],
       });
-    } catch (error) {
-      console.error(error);
-
-      if (error instanceof Error) {
-        alert(error.message);
-      } else {
-        alert("Unknown error");
-      }
+    } catch (err) {
+      console.error(err);
+      setError(
+        err instanceof Error ? err.message : "Something went wrong. Please try again."
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
     <main className="min-h-screen">
+
       {/* NAVBAR */}
 
       <nav className="container-width py-8 flex items-center justify-between">
-        <div>
-          <p className="text-sm uppercase tracking-[0.28em] text-muted">
-           ResumeScope
-          </p>
-        </div>
+        <p className="text-sm uppercase tracking-[0.28em] text-muted">
+          Resume Fit Analyzer
+        </p>
 
         <button
           className="secondary-button text-sm"
@@ -159,52 +155,50 @@ export default function AnalyzePage() {
 
       {/* HERO */}
 
-      <section className="container-width pt-16 md:pt-24 pb-16">
-        <div className="max-w-4xl">
-          <div className="fade-up">
-            <p className="text-sm uppercase tracking-[0.24em] text-muted">
-              Resume Analysis
-            </p>
-          </div>
+      <section className="container-width pt-16 md:pt-20 pb-12">
+        <div className="max-w-3xl">
+          <p className="text-sm uppercase tracking-[0.24em] text-muted fade-up">
+            Resume Analysis
+          </p>
 
-          <div className="mt-6 fade-up fade-delay-1">
-            <h1 className="text-5xl md:text-7xl leading-[0.98] font-semibold">
-              Understand your resume fit instantly.
-            </h1>
-          </div>
+          <h1 className="text-5xl md:text-6xl leading-[1.0] font-semibold mt-5 fade-up fade-delay-1">
+            See how well your resume fits the role.
+          </h1>
 
-          <div className="mt-8 fade-up fade-delay-2">
-            <p className="text-lg text-secondary max-w-2xl leading-[1.9]">
-              Compare your resume against any job description and
-              identify ATS compatibility, missing skills, and
-              optimization opportunities.
-            </p>
-          </div>
+          <p className="text-base text-secondary max-w-xl leading-[1.9] mt-6 fade-up fade-delay-2">
+            Upload your resume and paste a job description.
+            We'll identify matched skills, critical gaps, and
+            actionable improvements.
+          </p>
         </div>
       </section>
 
       {/* INPUT SECTION */}
 
       <section className="container-width pb-10">
-        <div className="grid lg:grid-cols-2 gap-8 items-stretch">
+        <div className="grid lg:grid-cols-2 gap-6 items-stretch">
           <ResumeUpload file={resumeFile} setFile={setResumeFile} />
-
-          <JDInput
-            value={jobDescription}
-            onChange={setJobDescription}
-          />
+          <JDInput value={jobDescription} onChange={setJobDescription} />
         </div>
+
+        {/* INLINE ERROR */}
+
+        {error && (
+          <div className="mt-6 rounded-[16px] border border-red-500/20 bg-red-500/[0.06] px-6 py-4">
+            <p className="text-sm text-red-400">{error}</p>
+          </div>
+        )}
 
         {/* ANALYZE BUTTON */}
 
-        <div className="flex justify-center mt-12">
+        <div className="flex justify-center mt-10">
           <button
             onClick={handleAnalyze}
             disabled={loading}
             className="
               primary-button
-              min-w-[220px]
-              disabled:opacity-50
+              min-w-[200px]
+              disabled:opacity-40
               disabled:cursor-not-allowed
             "
           >
@@ -226,13 +220,13 @@ export default function AnalyzePage() {
       {!loading && result && (
         <MatchResults
           score={result.score}
-          matchedSkills={result.matchedSkills || []}
-          missingSkills={result.missingSkills || []}
-          criticalGaps={result.criticalGaps || []}
-          moderateGaps={result.moderateGaps || []}
-          minorGaps={result.minorGaps || []}
+          matchedSkills={result.matchedSkills}
+          missingSkills={result.missingSkills}
+          criticalGaps={result.criticalGaps}
+          moderateGaps={result.moderateGaps}
+          minorGaps={result.minorGaps}
           summary={result.summary}
-          recommendations={result.recommendations || []}
+          recommendations={result.recommendations}
         />
       )}
 
@@ -241,6 +235,7 @@ export default function AnalyzePage() {
       <footer className="container-width py-10 mt-20 border-t border-white/5 flex items-center justify-between text-sm text-muted">
         <p>Madhurima Yakkala</p>
       </footer>
+
     </main>
   );
 }

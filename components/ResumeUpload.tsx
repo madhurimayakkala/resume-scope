@@ -1,27 +1,53 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 interface ResumeUploadProps {
   file: File | null;
   setFile: (file: File | null) => void;
 }
 
-export default function ResumeUpload({
-  file,
-  setFile,
-}: ResumeUploadProps) {
+export default function ResumeUpload({ file, setFile }: ResumeUploadProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleFileChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const uploadedFile = e.target.files?.[0];
+  function validateAndSet(selected: File) {
+    setError(null);
 
-    if (uploadedFile) {
-      setFile(uploadedFile);
+    if (!selected.name.endsWith(".pdf")) {
+      setError("Only PDF files are supported.");
+      return;
     }
-  };
+
+    if (selected.size > 5 * 1024 * 1024) {
+      setError("File must be under 5MB.");
+      return;
+    }
+
+    setFile(selected);
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = e.target.files?.[0];
+    if (selected) validateAndSet(selected);
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setDragging(false);
+    const dropped = e.dataTransfer.files?.[0];
+    if (dropped) validateAndSet(dropped);
+  }
+
+  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setDragging(true);
+  }
+
+  function handleDragLeave() {
+    setDragging(false);
+  }
 
   return (
     <div className="glass-surface rounded-[32px] p-8 md:p-10">
@@ -41,29 +67,48 @@ export default function ResumeUpload({
 
       <div
         onClick={() => inputRef.current?.click()}
-        className="
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        className={`
           mt-10
-          border border-dashed border-white/10
+          border border-dashed
           rounded-[28px]
           p-14
           cursor-pointer
           transition-all duration-300
-          hover:border-white/20
-          hover:bg-white/[0.03]
-        "
+          ${
+            dragging
+              ? "border-white/30 bg-white/[0.05]"
+              : "border-white/10 hover:border-white/20 hover:bg-white/[0.03]"
+          }
+        `}
       >
         <div className="flex flex-col items-center justify-center text-center">
-          <div className="w-20 h-20 rounded-[24px] bg-white/[0.04] flex items-center justify-center text-3xl transition-all duration-300 hover:scale-[1.02]">
+          <div className="w-16 h-16 rounded-[20px] bg-white/[0.04] flex items-center justify-center text-2xl transition-all duration-300 hover:scale-[1.02]">
             ↑
           </div>
 
-          <h3 className="mt-8 text-2xl font-medium">
-            {file ? file.name : "Drop PDF Resume"}
-          </h3>
-
-          <p className="mt-4 text-secondary max-w-md leading-[1.8]">
-            Upload your resume to begin ATS analysis and skill matching.
-          </p>
+          {file ? (
+            <>
+              <h3 className="mt-6 text-xl font-medium">{file.name}</h3>
+              <p className="mt-2 text-secondary text-sm">
+                {(file.size / 1024).toFixed(0)} KB · PDF
+              </p>
+              <p className="mt-4 text-muted text-sm">
+                Click to replace
+              </p>
+            </>
+          ) : (
+            <>
+              <h3 className="mt-6 text-xl font-medium">
+                Drop your PDF here
+              </h3>
+              <p className="mt-3 text-secondary text-sm leading-[1.8] max-w-xs">
+                or click to browse. PDF only, max 5MB.
+              </p>
+            </>
+          )}
         </div>
 
         <input
@@ -74,6 +119,12 @@ export default function ResumeUpload({
           onChange={handleFileChange}
         />
       </div>
+
+      {error && (
+        <p className="mt-4 text-sm text-red-400 text-center">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

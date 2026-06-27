@@ -1,6 +1,7 @@
 export interface Recommendation {
   title: string;
   description: string;
+  reason: string;
   priority: number;
   category:
     | "critical_gap"

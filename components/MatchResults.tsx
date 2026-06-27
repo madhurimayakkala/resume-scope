@@ -19,6 +19,43 @@ interface MatchResultsProps {
   recommendations: Recommendation[];
 }
 
+function ScoreContext({ score }: { score: number }) {
+  if (score >= 80) {
+    return (
+      <p className="text-secondary leading-[1.8] text-[14px]">
+        Your resume aligns well with this role. Focus on measurable
+        impact and tailoring your narrative to stand out to reviewers.
+      </p>
+    );
+  }
+
+  if (score >= 60) {
+    return (
+      <p className="text-secondary leading-[1.8] text-[14px]">
+        Solid foundation with room to improve. Addressing the gaps
+        below could meaningfully increase your match score.
+      </p>
+    );
+  }
+
+  if (score >= 40) {
+    return (
+      <p className="text-secondary leading-[1.8] text-[14px]">
+        Your resume partially matches this role. Review the critical
+        gaps and consider tailoring your resume more specifically to
+        this job description.
+      </p>
+    );
+  }
+
+  return (
+    <p className="text-secondary leading-[1.8] text-[14px]">
+      Low alignment with this role. If this is a target role,
+      significant tailoring is recommended before applying.
+    </p>
+  );
+}
+
 export default function MatchResults({
   score,
   matchedSkills,
@@ -32,62 +69,51 @@ export default function MatchResults({
   return (
     <section className="container-width py-20">
       <div className="max-w-6xl mx-auto">
+
         {/* HEADER */}
 
-        <div className="mb-14">
+        <div className="mb-12">
           <p className="text-sm uppercase tracking-[0.24em] text-muted">
-            ATS Analysis
+            Analysis Results
           </p>
 
-          <h2 className="text-5xl font-semibold mt-5">
-            Resume Match Results
+          <h2 className="text-4xl font-semibold mt-4">
+            Resume Match Report
           </h2>
         </div>
 
-        {/* TOP GRID */}
+        {/* SCORE + CONTEXT ROW */}
 
-        <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-8">
+        <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-6 mb-6">
+
           {/* SCORE */}
 
-          <div className="glass-surface rounded-[32px] p-8">
+          <div className="glass-surface rounded-[28px] p-7 flex flex-col gap-6">
             <MatchScoreCard score={score} />
 
-            <div className="mt-8 rounded-[24px] border border-white/10 bg-white/[0.03] p-6">
-              <p className="text-secondary leading-[1.8]">
-                {score >= 80 &&
-                  "Your resume strongly aligns with the job description. ATS compatibility appears highly competitive for this role."}
-
-                {score >= 50 &&
-                  score < 80 &&
-                  "Your resume shows moderate alignment with the role. Improving keyword coverage and technical depth could strengthen ATS performance."}
-
-                {score >= 20 &&
-                  score < 50 &&
-                  "Your resume has limited alignment with the job description. Adding more relevant technologies and role-specific terminology may improve compatibility."}
-
-                {score < 20 &&
-                  "Your resume currently shows very low alignment with this role. Tailoring your resume specifically to the job description could significantly improve ATS matching."}
-              </p>
+            <div className="rounded-[20px] border border-white/[0.08] bg-white/[0.03] p-5">
+              <ScoreContext score={score} />
             </div>
           </div>
 
-          {/* SKILLS */}
+          {/* SKILLS BREAKDOWN */}
 
-          <div className="glass-surface rounded-[32px] p-8">
+          <div className="glass-surface rounded-[28px] p-7 flex flex-col gap-8">
+
             {/* MATCHED */}
 
             <div>
-              <p className="text-sm uppercase tracking-[0.2em] text-muted mb-5">
+              <p className="text-xs uppercase tracking-[0.2em] text-muted mb-4">
                 Matched Skills
               </p>
 
-              <div className="flex flex-wrap gap-3">
-                {(matchedSkills || []).length > 0 ? (
-                  (matchedSkills || []).map((skill) => (
+              <div className="flex flex-wrap gap-2">
+                {matchedSkills.length > 0 ? (
+                  matchedSkills.map((skill) => (
                     <SkillBadge key={skill} label={skill} />
                   ))
                 ) : (
-                  <p className="text-secondary">
+                  <p className="text-secondary text-sm">
                     No matched skills detected.
                   </p>
                 )}
@@ -96,97 +122,120 @@ export default function MatchResults({
 
             {/* CRITICAL GAPS */}
 
-            <div className="mt-10">
-              <p className="text-sm uppercase tracking-[0.2em] text-red-400 mb-5">
-                Critical Gaps
-              </p>
+            {criticalGaps.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <p className="text-xs uppercase tracking-[0.2em] text-red-400">
+                    Critical Gaps
+                  </p>
+                  <span className="text-xs text-muted">
+                    — appears 3+ times in the job description
+                  </span>
+                </div>
 
-              <div className="flex flex-wrap gap-3">
-                {criticalGaps.length > 0 ? (
-                  criticalGaps.map((gap) => (
+                <div className="flex flex-wrap gap-2">
+                  {criticalGaps.map((gap) => (
                     <SkillBadge
                       key={gap.skill}
-                      label={`${gap.skill} (${gap.count})`}
+                      label={`${gap.skill} · ${gap.count}×`}
                       muted
                     />
-                  ))
-                ) : (
-                  <p className="text-secondary">
-                    No critical gaps detected.
-                  </p>
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* MODERATE GAPS */}
 
-            <div className="mt-10">
-              <p className="text-sm uppercase tracking-[0.2em] text-yellow-400 mb-5">
-                Moderate Gaps
-              </p>
+            {moderateGaps.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <p className="text-xs uppercase tracking-[0.2em] text-yellow-400">
+                    Moderate Gaps
+                  </p>
+                  <span className="text-xs text-muted">
+                    — mentioned more than once
+                  </span>
+                </div>
 
-              <div className="flex flex-wrap gap-3">
-                {moderateGaps.length > 0 ? (
-                  moderateGaps.map((gap) => (
+                <div className="flex flex-wrap gap-2">
+                  {moderateGaps.map((gap) => (
                     <SkillBadge
                       key={gap.skill}
-                      label={`${gap.skill} (${gap.count})`}
+                      label={`${gap.skill} · ${gap.count}×`}
                       muted
                     />
-                  ))
-                ) : (
-                  <p className="text-secondary">
-                    No moderate gaps detected.
-                  </p>
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* NICE TO HAVE */}
+            {/* MINOR GAPS */}
 
-            <div className="mt-10">
-              <p className="text-sm uppercase tracking-[0.2em] text-blue-400 mb-5">
-                Nice To Have
-              </p>
+            {minorGaps.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <p className="text-xs uppercase tracking-[0.2em] text-blue-400">
+                    Nice to Have
+                  </p>
+                  <span className="text-xs text-muted">
+                    — mentioned once
+                  </span>
+                </div>
 
-              <div className="flex flex-wrap gap-3">
-                {minorGaps.length > 0 ? (
-                  minorGaps.map((gap) => (
+                <div className="flex flex-wrap gap-2">
+                  {minorGaps.map((gap) => (
                     <SkillBadge
                       key={gap.skill}
-                      label={`${gap.skill} (${gap.count})`}
+                      label={gap.skill}
                       muted
                     />
-                  ))
-                ) : (
-                  <p className="text-secondary">
-                    No minor gaps detected.
-                  </p>
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* SUMMARY */}
-
-            <div className="mt-10 rounded-[28px] border border-white/10 bg-white/[0.03] p-6">
-              <p className="text-secondary leading-[1.9]">{summary}</p>
-            </div>
           </div>
+        </div>
+
+        {/* SUMMARY */}
+
+        <div className="glass-surface rounded-[28px] p-7 mb-6">
+          <p className="text-xs uppercase tracking-[0.2em] text-muted mb-4">
+            Full Breakdown
+          </p>
+
+          <pre className="text-secondary text-[13px] leading-[1.9] whitespace-pre-wrap font-sans">
+            {summary}
+          </pre>
         </div>
 
         {/* RECOMMENDATIONS */}
 
         {recommendations && recommendations.length > 0 && (
-          <div className="mt-12 grid md:grid-cols-3 gap-6">
-            {recommendations.map((rec) => (
-              <RecommendationCard
-                key={rec.title}
-                title={rec.title}
-                description={rec.description}
-              />
-            ))}
+          <div>
+            <div className="mb-6">
+              <p className="text-xs uppercase tracking-[0.2em] text-muted mb-1">
+                Recommendations
+              </p>
+              <p className="text-sm text-secondary">
+                Prioritized by impact on your application.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+              {recommendations.map((rec) => (
+                <RecommendationCard
+                  key={rec.title}
+                  title={rec.title}
+                  description={rec.description}
+                  reason={rec.reason}
+                />
+              ))}
+            </div>
           </div>
         )}
+
       </div>
     </section>
   );

@@ -12,12 +12,8 @@ export async function POST(request: Request) {
 
     if (!resumeText || !jobDescription) {
       return NextResponse.json(
-        {
-          error: "Resume text and job description are required.",
-        },
-        {
-          status: 400,
-        }
+        { error: "Resume text and job description are required." },
+        { status: 400 }
       );
     }
 
@@ -28,8 +24,11 @@ export async function POST(request: Request) {
     const {
       matchedSkills,
       missingSkills,
+      jdSkills,
+      resumeSkills,
       matchedWeight,
       totalWeight,
+      skillFrequency,
       criticalGaps,
       moderateGaps,
       minorGaps,
@@ -45,35 +44,21 @@ export async function POST(request: Request) {
       GENERATE SUMMARY
     */
 
-    const aiExplanation = `
-Your resume matches ${matchScore}% of the detected ATS keywords.
+    const aiExplanation = `Your resume matches ${matchScore}% of the skills detected in this job description.
 
-Matched skills:
-${matchedSkills.join(", ") || "None"}
+Matched skills (${matchedSkills.length}): ${matchedSkills.join(", ") || "None"}
 
-Critical gaps:
-${
-  criticalGaps
-    .map((gap) => `${gap.skill} (${gap.count} mentions)`)
-    .join(", ") || "None"
-}
+Critical gaps: ${
+      criticalGaps.map((g) => `${g.skill} (${g.count}×)`).join(", ") || "None"
+    }
 
-Moderate gaps:
-${
-  moderateGaps
-    .map((gap) => `${gap.skill} (${gap.count} mentions)`)
-    .join(", ") || "None"
-}
+Moderate gaps: ${
+      moderateGaps.map((g) => `${g.skill} (${g.count}×)`).join(", ") || "None"
+    }
 
-Minor gaps:
-${
-  minorGaps
-    .map((gap) => `${gap.skill} (${gap.count} mentions)`)
-    .join(", ") || "None"
-}
-
-Focus on the critical gaps first because they appear most frequently in the job description.
-`;
+Minor gaps: ${
+      minorGaps.map((g) => g.skill).join(", ") || "None"
+    }`;
 
     /*
       GENERATE DYNAMIC RECOMMENDATIONS
@@ -98,6 +83,9 @@ Focus on the critical gaps first because they appear most frequently in the job 
       matchScore,
       matchedSkills,
       missingSkills,
+      jdSkills,
+      resumeSkills,
+      skillFrequency,
       criticalGaps,
       moderateGaps,
       minorGaps,
@@ -105,15 +93,11 @@ Focus on the critical gaps first because they appear most frequently in the job 
       recommendations,
     });
   } catch (error) {
-    console.error(error);
+    console.error("[analyze] error:", error);
 
     return NextResponse.json(
-      {
-        error: "Failed to analyze resume.",
-      },
-      {
-        status: 500,
-      }
+      { error: "Failed to analyze resume." },
+      { status: 500 }
     );
   }
 }
