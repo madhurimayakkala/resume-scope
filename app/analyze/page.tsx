@@ -6,6 +6,7 @@ import JDInput from "@/components/JDInput";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import MatchResults from "@/components/MatchResults";
 import ResumeUpload from "@/components/ResumeUpload";
+import { Recommendation } from "@/types";
 
 interface GapSkill {
   skill: string;
@@ -14,31 +15,23 @@ interface GapSkill {
 
 interface AnalysisResult {
   score: number;
-
   matchedSkills: string[];
-
   missingSkills: string[];
-
   criticalGaps: GapSkill[];
-
   moderateGaps: GapSkill[];
-
   minorGaps: GapSkill[];
-
   summary: string;
+  recommendations: Recommendation[];
 }
 
 export default function AnalyzePage() {
-  const [resumeFile, setResumeFile] =
-    useState<File | null>(null);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
 
-  const [jobDescription, setJobDescription] =
-    useState("");
+  const [jobDescription, setJobDescription] = useState("");
 
   const [loading, setLoading] = useState(false);
 
-  const [result, setResult] =
-    useState<AnalysisResult | null>(null);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
 
   const handleAnalyze = async () => {
     if (!resumeFile || !jobDescription.trim()) {
@@ -60,107 +53,86 @@ export default function AnalyzePage() {
 
       formData.append("resume", resumeFile);
 
-      const parseResponse = await fetch(
-        "/api/parse-resume",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const parseResponse = await fetch("/api/parse-resume", {
+        method: "POST",
+        body: formData,
+      });
 
       if (!parseResponse.ok) {
-        throw new Error(
-          "Failed to parse resume."
-        );
+        throw new Error("Failed to parse resume.");
       }
 
-      const parsedData =
-        await parseResponse.json();
+      const parsedData = await parseResponse.json();
 
       /*
         ANALYZE RESUME
       */
 
-      const analyzeResponse = await fetch(
-        "/api/analyze",
-        {
-          method: "POST",
+      const analyzeResponse = await fetch("/api/analyze", {
+        method: "POST",
 
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-          body: JSON.stringify({
-            resumeText: parsedData.text,
-            jobDescription,
-          }),
-        }
-      );
+        body: JSON.stringify({
+          resumeText: parsedData.text,
+          jobDescription,
+        }),
+      });
 
       if (!analyzeResponse.ok) {
-        throw new Error(
-          "Failed to analyze resume."
-        );
+        throw new Error("Failed to analyze resume.");
       }
 
-      const analysis =
-        await analyzeResponse.json();
+      const analysis = await analyzeResponse.json();
 
       /*
         SAFE RESULT HANDLING
       */
-setResult({
-  score:
-    typeof analysis.matchScore ===
-    "number"
-      ? analysis.matchScore
-      : 0,
 
-  matchedSkills: Array.isArray(
-    analysis.matchedSkills
-  )
-    ? analysis.matchedSkills
-    : [],
+      setResult({
+        score:
+          typeof analysis.matchScore === "number"
+            ? analysis.matchScore
+            : 0,
 
-  missingSkills: Array.isArray(
-    analysis.missingSkills
-  )
-    ? analysis.missingSkills
-    : [],
+        matchedSkills: Array.isArray(analysis.matchedSkills)
+          ? analysis.matchedSkills
+          : [],
 
-  criticalGaps: Array.isArray(
-    analysis.criticalGaps
-  )
-    ? analysis.criticalGaps
-    : [],
+        missingSkills: Array.isArray(analysis.missingSkills)
+          ? analysis.missingSkills
+          : [],
 
-  moderateGaps: Array.isArray(
-    analysis.moderateGaps
-  )
-    ? analysis.moderateGaps
-    : [],
+        criticalGaps: Array.isArray(analysis.criticalGaps)
+          ? analysis.criticalGaps
+          : [],
 
-  minorGaps: Array.isArray(
-    analysis.minorGaps
-  )
-    ? analysis.minorGaps
-    : [],
+        moderateGaps: Array.isArray(analysis.moderateGaps)
+          ? analysis.moderateGaps
+          : [],
 
-  summary:
-    analysis.aiExplanation ||
-    "Analysis completed successfully.",
-});
+        minorGaps: Array.isArray(analysis.minorGaps)
+          ? analysis.minorGaps
+          : [],
 
-    }catch (error) {
-  console.error(error);
+        summary:
+          analysis.aiExplanation ||
+          "Analysis completed successfully.",
 
-  if (error instanceof Error) {
-    alert(error.message);
-  } else {
-    alert("Unknown error");
-  }
-}
+        recommendations: Array.isArray(analysis.recommendations)
+          ? analysis.recommendations
+          : [],
+      });
+    } catch (error) {
+      console.error(error);
+
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("Unknown error");
+      }
     } finally {
       setLoading(false);
     }
@@ -173,15 +145,13 @@ setResult({
       <nav className="container-width py-8 flex items-center justify-between">
         <div>
           <p className="text-sm uppercase tracking-[0.28em] text-muted">
-            ATS Resume Matcher
+           ResumeScope
           </p>
         </div>
 
         <button
           className="secondary-button text-sm"
-          onClick={() =>
-            (window.location.href = "/")
-          }
+          onClick={() => (window.location.href = "/")}
         >
           Back Home
         </button>
@@ -205,9 +175,8 @@ setResult({
 
           <div className="mt-8 fade-up fade-delay-2">
             <p className="text-lg text-secondary max-w-2xl leading-[1.9]">
-              Compare your resume against any job
-              description and identify ATS
-              compatibility, missing skills, and
+              Compare your resume against any job description and
+              identify ATS compatibility, missing skills, and
               optimization opportunities.
             </p>
           </div>
@@ -218,10 +187,7 @@ setResult({
 
       <section className="container-width pb-10">
         <div className="grid lg:grid-cols-2 gap-8 items-stretch">
-          <ResumeUpload
-            file={resumeFile}
-            setFile={setResumeFile}
-          />
+          <ResumeUpload file={resumeFile} setFile={setResumeFile} />
 
           <JDInput
             value={jobDescription}
@@ -242,9 +208,7 @@ setResult({
               disabled:cursor-not-allowed
             "
           >
-            {loading
-              ? "Analyzing..."
-              : "Analyze Resume"}
+            {loading ? "Analyzing..." : "Analyze Resume"}
           </button>
         </div>
       </section>
@@ -259,27 +223,19 @@ setResult({
 
       {/* RESULTS */}
 
-{!loading && result && (
-  <MatchResults
-    score={result.score}
-    matchedSkills={
-      result.matchedSkills || []
-    }
-    missingSkills={
-      result.missingSkills || []
-    }
-    criticalGaps={
-      result.criticalGaps || []
-    }
-    moderateGaps={
-      result.moderateGaps || []
-    }
-    minorGaps={
-      result.minorGaps || []
-    }
-    summary={result.summary}
-  />
-)}
+      {!loading && result && (
+        <MatchResults
+          score={result.score}
+          matchedSkills={result.matchedSkills || []}
+          missingSkills={result.missingSkills || []}
+          criticalGaps={result.criticalGaps || []}
+          moderateGaps={result.moderateGaps || []}
+          minorGaps={result.minorGaps || []}
+          summary={result.summary}
+          recommendations={result.recommendations || []}
+        />
+      )}
+
       {/* FOOTER */}
 
       <footer className="container-width py-10 mt-20 border-t border-white/5 flex items-center justify-between text-sm text-muted">

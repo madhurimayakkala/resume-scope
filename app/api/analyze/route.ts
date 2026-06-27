@@ -1,23 +1,19 @@
 import { NextResponse } from "next/server";
 
 import { matchSkills } from "@/lib/matcher";
-
 import { calculateMatchScore } from "@/lib/scorer";
+import { generateRecommendations } from "@/lib/recommendations";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const {
-      resumeText,
-      jobDescription,
-    } = body;
+    const { resumeText, jobDescription } = body;
 
     if (!resumeText || !jobDescription) {
       return NextResponse.json(
         {
-          error:
-            "Resume text and job description are required.",
+          error: "Resume text and job description are required.",
         },
         {
           status: 400,
@@ -29,36 +25,27 @@ export async function POST(request: Request) {
       MATCH SKILLS
     */
 
-      const {
-  matchedSkills,
-  missingSkills,
-  jdSkills,
+    const {
+      matchedSkills,
+      missingSkills,
+      matchedWeight,
+      totalWeight,
+      criticalGaps,
+      moderateGaps,
+      minorGaps,
+    } = matchSkills(resumeText, jobDescription);
 
-  matchedWeight,
-  totalWeight,
-
-  criticalGaps,
-  moderateGaps,
-  minorGaps,
-} = matchSkills(
-  resumeText,
-  jobDescription
-);
     /*
       CALCULATE SCORE
     */
 
-const matchScore =
-  calculateMatchScore(
-    matchedWeight,
-    totalWeight
-  );
+    const matchScore = calculateMatchScore(matchedWeight, totalWeight);
 
     /*
       GENERATE SUMMARY
     */
 
-   const aiExplanation = `
+    const aiExplanation = `
 Your resume matches ${matchScore}% of the detected ATS keywords.
 
 Matched skills:
@@ -67,30 +54,21 @@ ${matchedSkills.join(", ") || "None"}
 Critical gaps:
 ${
   criticalGaps
-    .map(
-      (gap) =>
-        `${gap.skill} (${gap.count} mentions)`
-    )
+    .map((gap) => `${gap.skill} (${gap.count} mentions)`)
     .join(", ") || "None"
 }
 
 Moderate gaps:
 ${
   moderateGaps
-    .map(
-      (gap) =>
-        `${gap.skill} (${gap.count} mentions)`
-    )
+    .map((gap) => `${gap.skill} (${gap.count} mentions)`)
     .join(", ") || "None"
 }
 
 Minor gaps:
 ${
   minorGaps
-    .map(
-      (gap) =>
-        `${gap.skill} (${gap.count} mentions)`
-    )
+    .map((gap) => `${gap.skill} (${gap.count} mentions)`)
     .join(", ") || "None"
 }
 
@@ -98,31 +76,40 @@ Focus on the critical gaps first because they appear most frequently in the job 
 `;
 
     /*
+      GENERATE DYNAMIC RECOMMENDATIONS
+    */
+
+    const recommendations = generateRecommendations({
+      score: matchScore,
+      criticalGaps,
+      moderateGaps,
+      minorGaps,
+      matchedSkills,
+      missingSkills,
+      resumeText,
+      jdText: jobDescription,
+    });
+
+    /*
       RETURN RESPONSE
     */
 
     return NextResponse.json({
-  matchScore,
-
-  matchedSkills,
-
-  missingSkills,
-
-  criticalGaps,
-
-  moderateGaps,
-
-  minorGaps,
-
-  aiExplanation,
-});
+      matchScore,
+      matchedSkills,
+      missingSkills,
+      criticalGaps,
+      moderateGaps,
+      minorGaps,
+      aiExplanation,
+      recommendations,
+    });
   } catch (error) {
     console.error(error);
 
     return NextResponse.json(
       {
-        error:
-          "Failed to analyze resume.",
+        error: "Failed to analyze resume.",
       },
       {
         status: 500,

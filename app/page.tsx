@@ -6,7 +6,7 @@ export default function HomePage() {
     <main>
       <nav className="container-width flex items-center justify-between py-8">
         <div className="text-sm tracking-[0.24em] uppercase text-secondary">
-          ATS Resume Matcher
+        ResumeScope
         </div>
 
         <button className="secondary-button text-sm">
