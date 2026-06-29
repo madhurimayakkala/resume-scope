@@ -89,6 +89,8 @@ function inferRoleType(jdText: string): string {
       "observability",
       "prometheus",
       "grafana",
+      "pipeline",
+      "deployment",
     ],
     frontend: [
       "react",
@@ -149,7 +151,6 @@ export function generateRecommendations(
 
   /*
     CRITICAL GAPS
-    Surface the most urgent missing skills with frequency context.
   */
   if (criticalGaps.length > 0) {
     const topSkill = criticalGaps[0];
@@ -170,7 +171,7 @@ export function generateRecommendations(
   }
 
   /*
-    HIGH SCORE — shift focus from keywords to differentiation
+    HIGH SCORE
   */
   if (score >= 85) {
     recs.push({
@@ -299,6 +300,28 @@ export function generateRecommendations(
   }
 
   /*
+    ROLE-SPECIFIC: DEVOPS
+  */
+  if (
+    roleType === "devops" &&
+    missingSkills.some((s) =>
+      ["kubernetes", "terraform", "ansible", "ci/cd", "docker"].includes(
+        s.toLowerCase()
+      )
+    )
+  ) {
+    recs.push({
+      title: "Add infrastructure and pipeline experience",
+      description:
+        "DevOps roles expect hands-on experience with infrastructure tooling. If you have configured CI/CD pipelines, written Dockerfiles, or managed cloud resources — even for a personal project — make that explicit.",
+      reason:
+        "Infrastructure and pipeline skills appear in this JD but are missing from your resume. These are core requirements for DevOps roles, not nice-to-haves.",
+      priority: 85,
+      category: "role_fit",
+    });
+  }
+
+  /*
     STRUCTURE: MISSING PROJECTS SECTION
   */
   if (!signals.hasProjectsSection && score < 75) {
@@ -328,7 +351,7 @@ export function generateRecommendations(
   }
 
   /*
-    POSITIVE SIGNAL: WELL OPTIMIZED
+    POSITIVE SIGNAL
   */
   if (
     matchedSkills.length >= 6 &&

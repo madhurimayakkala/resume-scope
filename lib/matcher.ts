@@ -2,6 +2,14 @@ import { SKILL_KEYWORDS } from "./skillKeywords";
 import { SYNONYMS } from "./synonyms";
 import { tokenize, normalizeToken } from "./utils";
 
+/*
+  Named constants for gap tier thresholds and weight cap.
+  Change these in one place to affect the entire pipeline.
+*/
+const CRITICAL_THRESHOLD = 3;
+const MODERATE_THRESHOLD = 2;
+const MAX_SKILL_WEIGHT = 5;
+
 export interface GapSkill {
   skill: string;
   count: number;
@@ -31,10 +39,6 @@ function detectPhrases(text: string): string[] {
   const lower = text.toLowerCase();
   const detected: string[] = [];
 
-  /*
-    Multi-word phrases to scan for explicitly.
-    Order matters — longer phrases first to avoid partial matches.
-  */
   const PHRASES = [
     "machine learning",
     "deep learning",
@@ -77,10 +81,6 @@ function detectPhrases(text: string): string[] {
   ];
 
   for (const phrase of PHRASES) {
-    /*
-      Use word-boundary aware matching.
-      Escape special chars in the phrase for safe regex usage.
-    */
     const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(`\\b${escaped}\\b`, "i");
     if (regex.test(lower)) {
@@ -99,17 +99,9 @@ function detectPhrases(text: string): string[] {
 function extractTerms(text: string): string[] {
   const terms: string[] = [];
 
-  /*
-    Detect multi-word phrases first before tokenization
-    breaks them apart.
-  */
   const phrases = detectPhrases(text);
   terms.push(...phrases);
 
-  /*
-    Extract special-character tech terms that tokenization
-    would otherwise destroy: C++, C#, .NET, gRPC, tRPC, GraphQL
-  */
   const specialPatterns = [
     /\bc\+\+/gi,
     /\bc#/gi,
@@ -143,9 +135,6 @@ function extractTerms(text: string): string[] {
     }
   }
 
-  /*
-    Tokenize the remaining text into individual words.
-  */
   const tokens = tokenize(text);
   terms.push(...tokens);
 
@@ -175,16 +164,6 @@ function deduplicateTerms(terms: string[]): string[] {
 /*
   STAGE 5 — SKILL FILTERING
   Filters extracted terms against the known skill taxonomy.
-  This prevents noise words ("the", "and", "experience", "team")
-  from polluting the skill set while still allowing free-form
-  extraction to catch terms not in the original 55-word list.
-
-  Strategy:
-  - Accept any term that matches the SKILL_KEYWORDS taxonomy
-  - Accept any term that was a detected phrase (phrases are
-    always intentional tech terms)
-  - Accept synonyms that resolve to known skills
-  - Reject generic English words
 */
 function filterToSkills(
   terms: string[],
@@ -205,11 +184,8 @@ function filterToSkills(
 /*
   STAGE 6 — WEIGHT CALCULATION
   Counts how many times each JD skill term appears in the raw JD text.
-  Frequency drives the gap severity tiers:
-    >= 3 mentions → critical
-    >= 2 mentions → moderate
-    1 mention     → minor
-  Cap at 5 to prevent a single repeated term from dominating the score.
+  Capped at MAX_SKILL_WEIGHT to prevent a single repeated term from
+  dominating the score.
 */
 function calculateWeights(
   skills: string[],
@@ -222,7 +198,7 @@ function calculateWeights(
     const escaped = skill.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(`\\b${escaped}\\b`, "gi");
     const matches = lower.match(regex);
-    weights[skill] = Math.min(matches?.length ?? 1, 5);
+    weights[skill] = Math.min(matches?.length ?? 1, MAX_SKILL_WEIGHT);
   }
 
   return weights;
@@ -257,19 +233,15 @@ function compareSkills(
 
   for (const skill of missingSkills) {
     const count = jdWeights[skill] ?? 1;
-    if (count >= 3) {
+    if (count >= CRITICAL_THRESHOLD) {
       criticalGaps.push({ skill, count });
-    } else if (count >= 2) {
+    } else if (count >= MODERATE_THRESHOLD) {
       moderateGaps.push({ skill, count });
     } else {
       minorGaps.push({ skill, count });
     }
   }
 
-  /*
-    Sort each tier by frequency descending so the most
-    important gaps appear first.
-  */
   criticalGaps.sort((a, b) => b.count - a.count);
   moderateGaps.sort((a, b) => b.count - a.count);
   minorGaps.sort((a, b) => b.count - a.count);
@@ -304,32 +276,19 @@ export function matchSkills(
   resumeText: string,
   jdText: string
 ): MatchResult {
-  /*
-    Extract and normalize resume skills
-  */
   const resumePhrases = detectPhrases(resumeText);
   const rawResumeTerms = extractTerms(resumeText);
   const normalizedResumeTerms = normalizeTerms(rawResumeTerms);
   const dedupedResumeTerms = deduplicateTerms(normalizedResumeTerms);
   const resumeSkills = filterToSkills(dedupedResumeTerms, resumePhrases);
 
-  /*
-    Extract and normalize JD skills
-  */
   const jdPhrases = detectPhrases(jdText);
   const rawJdTerms = extractTerms(jdText);
   const normalizedJdTerms = normalizeTerms(rawJdTerms);
   const dedupedJdTerms = deduplicateTerms(normalizedJdTerms);
   const jdSkills = filterToSkills(dedupedJdTerms, jdPhrases);
 
-  /*
-    Calculate frequency weights from raw JD text
-  */
   const skillFrequency = calculateWeights(jdSkills, jdText);
-
-  /*
-    Compare and return results
-  */
   const comparison = compareSkills(resumeSkills, jdSkills, skillFrequency);
 
   return {

@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import JDInput from "@/components/JDInput";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -9,25 +9,10 @@ import MatchResults from "@/components/MatchResults";
 import ResumeUpload from "@/components/ResumeUpload";
 import SampleDataButton from "@/components/SampleDataButton";
 import { SAMPLE_JD, SAMPLE_RESUME } from "@/lib/sampleData";
-import { Recommendation } from "@/types";
-
-interface GapSkill {
-  skill: string;
-  count: number;
-}
-
-interface AnalysisResult {
-  score: number;
-  matchedSkills: string[];
-  missingSkills: string[];
-  criticalGaps: GapSkill[];
-  moderateGaps: GapSkill[];
-  minorGaps: GapSkill[];
-  summary: string;
-  recommendations: Recommendation[];
-}
+import { AnalysisResult, GapSkill, Recommendation } from "@/types";
 
 function AnalyzeContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
 
   const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -127,7 +112,7 @@ function AnalyzeContent() {
       const analysis = await analyzeResponse.json();
 
       setResult({
-        score:
+        matchScore:
           typeof analysis.matchScore === "number"
             ? analysis.matchScore
             : 0,
@@ -146,7 +131,7 @@ function AnalyzeContent() {
         minorGaps: Array.isArray(analysis.minorGaps)
           ? analysis.minorGaps
           : [],
-        summary: analysis.aiExplanation ?? "Analysis completed.",
+        aiExplanation: analysis.aiExplanation ?? "Analysis completed.",
         recommendations: Array.isArray(analysis.recommendations)
           ? analysis.recommendations
           : [],
@@ -175,7 +160,7 @@ function AnalyzeContent() {
 
         <button
           className="secondary-button text-sm"
-          onClick={() => (window.location.href = "/")}
+          onClick={() => router.push("/")}
         >
           Back Home
         </button>
@@ -282,13 +267,13 @@ function AnalyzeContent() {
 
       {!loading && result && (
         <MatchResults
-          score={result.score}
+          score={result.matchScore}
           matchedSkills={result.matchedSkills}
           missingSkills={result.missingSkills}
           criticalGaps={result.criticalGaps}
           moderateGaps={result.moderateGaps}
           minorGaps={result.minorGaps}
-          summary={result.summary}
+          summary={result.aiExplanation}
           recommendations={result.recommendations}
         />
       )}

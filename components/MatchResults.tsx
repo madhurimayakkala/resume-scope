@@ -1,3 +1,7 @@
+"use client";
+
+import { motion } from "framer-motion";
+
 import MatchScoreCard from "./MatchScoreCard";
 import RecommendationCard from "./RecommendationCard";
 import SkillBadge from "./SkillBadge";
@@ -72,7 +76,12 @@ export default function MatchResults({
 
         {/* HEADER */}
 
-        <div className="mb-12">
+        <motion.div
+          className="mb-12"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
           <p className="text-sm uppercase tracking-[0.24em] text-muted">
             Analysis Results
           </p>
@@ -80,12 +89,16 @@ export default function MatchResults({
           <h2 className="text-4xl font-semibold mt-4">
             Resume Match Report
           </h2>
-        </div>
+        </motion.div>
 
         {/* SCORE + CONTEXT ROW */}
 
-        <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-6 mb-6">
-
+        <motion.div
+          className="grid lg:grid-cols-[0.8fr_1.2fr] gap-6 mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: "easeOut", delay: 0.1 }}
+        >
           {/* SCORE */}
 
           <div className="glass-surface rounded-[28px] p-7 flex flex-col gap-6">
@@ -196,11 +209,16 @@ export default function MatchResults({
             )}
 
           </div>
-        </div>
+        </motion.div>
 
         {/* SUMMARY */}
 
-        <div className="glass-surface rounded-[28px] p-7 mb-6">
+        <motion.div
+          className="glass-surface rounded-[28px] p-7 mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: "easeOut", delay: 0.2 }}
+        >
           <p className="text-xs uppercase tracking-[0.2em] text-muted mb-4">
             Full Breakdown
           </p>
@@ -208,29 +226,44 @@ export default function MatchResults({
           <pre className="text-secondary text-[13px] leading-[1.9] whitespace-pre-wrap font-sans">
             {summary}
           </pre>
-        </div>
+        </motion.div>
 
         {/* RECOMMENDATIONS */}
 
         {recommendations && recommendations.length > 0 && (
           <div>
-            <div className="mb-6">
+            <motion.div
+              className="mb-6"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut", delay: 0.28 }}
+            >
               <p className="text-xs uppercase tracking-[0.2em] text-muted mb-1">
                 Recommendations
               </p>
               <p className="text-sm text-secondary">
                 Prioritized by impact on your application.
               </p>
-            </div>
+            </motion.div>
 
             <div className="grid md:grid-cols-3 gap-4">
-              {recommendations.map((rec) => (
-                <RecommendationCard
+              {recommendations.map((rec, index) => (
+                <motion.div
                   key={rec.title}
-                  title={rec.title}
-                  description={rec.description}
-                  reason={rec.reason}
-                />
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.4,
+                    ease: "easeOut",
+                    delay: 0.35 + index * 0.08,
+                  }}
+                >
+                  <RecommendationCard
+                    title={rec.title}
+                    description={rec.description}
+                    reason={rec.reason}
+                  />
+                </motion.div>
               ))}
             </div>
           </div>
