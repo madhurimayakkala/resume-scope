@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import JDInput from "@/components/JDInput";
@@ -27,7 +27,7 @@ interface AnalysisResult {
   recommendations: Recommendation[];
 }
 
-export default function AnalyzePage() {
+function AnalyzeContent() {
   const searchParams = useSearchParams();
 
   const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -38,10 +38,6 @@ export default function AnalyzePage() {
   const [error, setError] = useState<string | null>(null);
   const [usingSample, setUsingSample] = useState(false);
 
-  /*
-    If the page is loaded with ?demo=true (from the View Demo
-    button on the homepage), auto-load sample data on mount.
-  */
   useEffect(() => {
     if (searchParams.get("demo") === "true") {
       handleLoadSample();
@@ -304,5 +300,13 @@ export default function AnalyzePage() {
       </footer>
 
     </main>
+  );
+}
+
+export default function AnalyzePage() {
+  return (
+    <Suspense>
+      <AnalyzeContent />
+    </Suspense>
   );
 }
