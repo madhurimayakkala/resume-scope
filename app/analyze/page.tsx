@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import JDInput from "@/components/JDInput";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import MatchResults from "@/components/MatchResults";
 import ResumeUpload from "@/components/ResumeUpload";
+import SampleDataButton from "@/components/SampleDataButton";
+import { SAMPLE_JD, SAMPLE_RESUME } from "@/lib/sampleData";
 import { Recommendation } from "@/types";
 
 interface GapSkill {
@@ -25,16 +28,45 @@ interface AnalysisResult {
 }
 
 export default function AnalyzePage() {
+  const searchParams = useSearchParams();
+
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [resumeText, setResumeText] = useState<string | null>(null);
   const [jobDescription, setJobDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [usingSample, setUsingSample] = useState(false);
+
+  /*
+    If the page is loaded with ?demo=true (from the View Demo
+    button on the homepage), auto-load sample data on mount.
+  */
+  useEffect(() => {
+    if (searchParams.get("demo") === "true") {
+      handleLoadSample();
+    }
+  }, []);
+
+  function handleLoadSample() {
+    setResumeFile(null);
+    setResumeText(SAMPLE_RESUME);
+    setJobDescription(SAMPLE_JD);
+    setResult(null);
+    setError(null);
+    setUsingSample(true);
+  }
+
+  function handleResumeFile(file: File | null) {
+    setResumeFile(file);
+    setResumeText(null);
+    setUsingSample(false);
+  }
 
   async function handleAnalyze() {
     setError(null);
 
-    if (!resumeFile) {
+    if (!resumeFile && !resumeText) {
       setError("Please upload a PDF resume before analyzing.");
       return;
     }
@@ -45,7 +77,9 @@ export default function AnalyzePage() {
     }
 
     if (jobDescription.trim().split(/\s+/).length < 20) {
-      setError("The job description looks too short. Paste the full role details for accurate results.");
+      setError(
+        "The job description looks too short. Paste the full role details for accurate results."
+      );
       return;
     }
 
@@ -53,40 +87,38 @@ export default function AnalyzePage() {
       setLoading(true);
       setResult(null);
 
-      /*
-        PARSE RESUME
-      */
+      let parsedResumeText = resumeText;
 
-      const formData = new FormData();
-      formData.append("resume", resumeFile);
+      if (!parsedResumeText && resumeFile) {
+        const formData = new FormData();
+        formData.append("resume", resumeFile);
 
-      const parseResponse = await fetch("/api/parse-resume", {
-        method: "POST",
-        body: formData,
-      });
+        const parseResponse = await fetch("/api/parse-resume", {
+          method: "POST",
+          body: formData,
+        });
 
-      if (!parseResponse.ok) {
-        const data = await parseResponse.json().catch(() => ({}));
-        throw new Error(data.error ?? "Failed to parse resume.");
+        if (!parseResponse.ok) {
+          const data = await parseResponse.json().catch(() => ({}));
+          throw new Error(data.error ?? "Failed to parse resume.");
+        }
+
+        const parsedData = await parseResponse.json();
+
+        if (!parsedData.text || parsedData.text.trim().length < 50) {
+          throw new Error(
+            "Could not extract text from this PDF. Try re-saving it as a standard PDF."
+          );
+        }
+
+        parsedResumeText = parsedData.text;
       }
-
-      const parsedData = await parseResponse.json();
-
-      if (!parsedData.text || parsedData.text.trim().length < 50) {
-        throw new Error(
-          "Could not extract text from this PDF. Try re-saving it as a standard PDF."
-        );
-      }
-
-      /*
-        ANALYZE RESUME
-      */
 
       const analyzeResponse = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          resumeText: parsedData.text,
+          resumeText: parsedResumeText,
           jobDescription,
         }),
       });
@@ -98,13 +130,11 @@ export default function AnalyzePage() {
 
       const analysis = await analyzeResponse.json();
 
-      /*
-        SAFE RESULT HANDLING
-      */
-
       setResult({
         score:
-          typeof analysis.matchScore === "number" ? analysis.matchScore : 0,
+          typeof analysis.matchScore === "number"
+            ? analysis.matchScore
+            : 0,
         matchedSkills: Array.isArray(analysis.matchedSkills)
           ? analysis.matchedSkills
           : [],
@@ -128,7 +158,9 @@ export default function AnalyzePage() {
     } catch (err) {
       console.error(err);
       setError(
-        err instanceof Error ? err.message : "Something went wrong. Please try again."
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again."
       );
     } finally {
       setLoading(false);
@@ -142,7 +174,7 @@ export default function AnalyzePage() {
 
       <nav className="container-width py-8 flex items-center justify-between">
         <p className="text-sm uppercase tracking-[0.28em] text-muted">
-          Resume Fit Analyzer
+          Resume Scope
         </p>
 
         <button
@@ -170,15 +202,50 @@ export default function AnalyzePage() {
             We'll identify matched skills, critical gaps, and
             actionable improvements.
           </p>
+
+          <div className="mt-8 fade-up fade-delay-3">
+            <SampleDataButton onLoad={handleLoadSample} />
+          </div>
         </div>
       </section>
+
+      {/* SAMPLE DATA BANNER */}
+
+      {usingSample && (
+        <section className="container-width mb-2">
+          <div className="rounded-[14px] border border-white/10 bg-white/[0.03] px-5 py-3 flex items-center justify-between">
+            <p className="text-sm text-secondary">
+              Using sample data — a CS student resume matched against a full-stack internship JD.
+            </p>
+
+            <button
+              onClick={() => {
+                setUsingSample(false);
+                setResumeText(null);
+                setJobDescription("");
+                setResult(null);
+              }}
+              className="text-xs text-muted hover:text-secondary transition-colors ml-4 shrink-0"
+            >
+              Clear
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* INPUT SECTION */}
 
       <section className="container-width pb-10">
         <div className="grid lg:grid-cols-2 gap-6 items-stretch">
-          <ResumeUpload file={resumeFile} setFile={setResumeFile} />
-          <JDInput value={jobDescription} onChange={setJobDescription} />
+          <ResumeUpload
+            file={resumeFile}
+            setFile={handleResumeFile}
+            sampleLoaded={usingSample}
+          />
+          <JDInput
+            value={jobDescription}
+            onChange={setJobDescription}
+          />
         </div>
 
         {/* INLINE ERROR */}

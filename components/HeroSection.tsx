@@ -6,7 +6,7 @@ export default function HeroSection() {
       <div className="max-w-5xl">
         <div className="fade-up">
           <span className="text-xs uppercase tracking-[0.28em] text-muted">
-            AI Resume Intelligence
+            Resume Intelligence
           </span>
         </div>
 
@@ -19,7 +19,7 @@ export default function HeroSection() {
         <div className="mt-10 fade-up fade-delay-2">
           <p className="text-lg md:text-xl text-secondary max-w-2xl leading-[1.8]">
             Upload your resume, compare it against any job description,
-            and understand your ATS compatibility instantly.
+            and understand your fit instantly.
           </p>
         </div>
 
@@ -30,9 +30,11 @@ export default function HeroSection() {
             </button>
           </Link>
 
-          <button className="secondary-button">
-            View Demo
-          </button>
+          <Link href="/analyze?demo=true">
+            <button className="secondary-button">
+              View Demo
+            </button>
+          </Link>
         </div>
       </div>
     </section>

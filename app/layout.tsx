@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import PageTransition from "@/components/PageTransition";
 
 export const metadata: Metadata = {
-  title: "ATS Resume Matcher",
-  description: "Understand your resume fit instantly.",
+  title: "Resume Scope",
+  description: "See how well your resume fits any role, instantly.",
 };
 
 export default function RootLayout({
@@ -13,7 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <PageTransition>{children}</PageTransition>
+      </body>
     </html>
   );
 }

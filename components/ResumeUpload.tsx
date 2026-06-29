@@ -5,9 +5,14 @@ import { useRef, useState } from "react";
 interface ResumeUploadProps {
   file: File | null;
   setFile: (file: File | null) => void;
+  sampleLoaded?: boolean;
 }
 
-export default function ResumeUpload({ file, setFile }: ResumeUploadProps) {
+export default function ResumeUpload({
+  file,
+  setFile,
+  sampleLoaded = false,
+}: ResumeUploadProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +52,67 @@ export default function ResumeUpload({ file, setFile }: ResumeUploadProps) {
 
   function handleDragLeave() {
     setDragging(false);
+  }
+
+  /*
+    When sample data is loaded, show a distinct state
+    instead of the normal upload prompt.
+  */
+
+  if (sampleLoaded) {
+    return (
+      <div className="glass-surface rounded-[32px] p-8 md:p-10">
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <p className="text-sm uppercase tracking-[0.24em] text-muted">
+              Resume
+            </p>
+
+            <h2 className="text-3xl font-semibold mt-4">
+              Upload your resume
+            </h2>
+          </div>
+
+          <div className="w-3 h-3 rounded-full bg-[#F0E7D5]/70 mt-2" />
+        </div>
+
+        <div
+          onClick={() => inputRef.current?.click()}
+          className="
+            mt-10
+            border border-dashed border-white/10
+            rounded-[28px]
+            p-14
+            cursor-pointer
+            transition-all duration-300
+            hover:border-white/20
+            hover:bg-white/[0.03]
+          "
+        >
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 rounded-[20px] bg-white/[0.04] flex items-center justify-center text-2xl">
+              ✓
+            </div>
+
+            <h3 className="mt-6 text-xl font-medium">
+              Sample resume loaded
+            </h3>
+
+            <p className="mt-3 text-secondary text-sm leading-[1.8] max-w-xs">
+              Click to upload your own PDF instead.
+            </p>
+          </div>
+
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".pdf"
+            hidden
+            onChange={handleFileChange}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (

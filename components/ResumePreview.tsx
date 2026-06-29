@@ -5,17 +5,18 @@ export default function ResumePreview() {
   return (
     <section className="container-width py-12 md:py-20">
       <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-stretch">
-        {/* LEFT */}
+
+        {/* LEFT — INPUT PREVIEW */}
 
         <div className="glass-surface rounded-[32px] p-8 md:p-10">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm uppercase tracking-[0.2em] text-muted">
-                Resume Upload
+                Step 1
               </p>
 
               <h3 className="text-2xl font-semibold mt-3">
-                Resume Analysis
+                Upload your resume
               </h3>
             </div>
 
@@ -29,79 +30,89 @@ export default function ResumePreview() {
               </div>
 
               <h4 className="mt-6 text-xl font-medium">
-                Upload Resume
+                Drop your PDF here
               </h4>
 
-              <p className="text-secondary mt-3 max-w-sm">
-                Drag and drop your PDF resume to begin
-                ATS analysis.
+              <p className="text-secondary mt-3 max-w-sm text-sm leading-[1.8]">
+                or click to browse. PDF only, max 5MB.
               </p>
             </div>
           </div>
 
           <div className="mt-8">
-            <label className="text-sm uppercase tracking-[0.2em] text-muted">
-              Job Description
-            </label>
+            <p className="text-sm uppercase tracking-[0.2em] text-muted">
+              Step 2
+            </p>
 
             <div className="mt-4 rounded-[28px] border border-white/10 bg-white/[0.03] p-6">
-              <p className="text-secondary leading-[1.8] text-[15px]">
-                Looking for a frontend developer skilled in
-                React, Next.js, TypeScript, APIs,
-                Tailwind CSS, and UI architecture...
+              <p className="text-secondary leading-[1.8] text-[14px]">
+                We're looking for a full-stack engineer with experience
+                in React, Node.js, PostgreSQL, Docker, and Jest.
+                TypeScript preferred. CI/CD experience is a plus.
               </p>
             </div>
           </div>
         </div>
 
-        {/* RIGHT */}
+        {/* RIGHT — RESULTS PREVIEW */}
 
         <div className="glass-surface rounded-[32px] p-8 md:p-10">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm uppercase tracking-[0.2em] text-muted">
-                ATS Insights
+                Results
               </p>
 
               <h3 className="text-2xl font-semibold mt-3">
-                Match Results
+                Your match report
               </h3>
             </div>
 
-            <div className="text-sm text-secondary">
-              Live Analysis
+            <div className="text-xs text-muted border border-white/10 rounded-full px-3 py-1">
+              Sample
             </div>
           </div>
 
           <div className="mt-10">
-            <MatchScoreCard score={84} />
+            <MatchScoreCard score={62} />
           </div>
 
           <div className="mt-10">
-            <p className="text-sm uppercase tracking-[0.2em] text-muted mb-5">
+            <p className="text-sm uppercase tracking-[0.2em] text-muted mb-4">
               Matched Skills
             </p>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               <SkillBadge label="React" />
               <SkillBadge label="Next.js" />
               <SkillBadge label="TypeScript" />
-              <SkillBadge label="Tailwind CSS" />
+              <SkillBadge label="PostgreSQL" />
+              <SkillBadge label="Node.js" />
             </div>
           </div>
 
-          <div className="mt-10">
-            <p className="text-sm uppercase tracking-[0.2em] text-muted mb-5">
-              Missing Skills
+          <div className="mt-8">
+            <p className="text-sm uppercase tracking-[0.2em] text-red-400 mb-4">
+              Critical Gaps
             </p>
 
-            <div className="flex flex-wrap gap-3">
-              <SkillBadge label="Docker" muted />
-              <SkillBadge label="Testing" muted />
-              <SkillBadge label="GraphQL" muted />
+            <div className="flex flex-wrap gap-2">
+              <SkillBadge label="Docker · 4×" muted />
+              <SkillBadge label="Jest · 3×" muted />
+            </div>
+          </div>
+
+          <div className="mt-8">
+            <p className="text-sm uppercase tracking-[0.2em] text-yellow-400 mb-4">
+              Moderate Gaps
+            </p>
+
+            <div className="flex flex-wrap gap-2">
+              <SkillBadge label="CI/CD · 2×" muted />
             </div>
           </div>
         </div>
+
       </div>
     </section>
   );
