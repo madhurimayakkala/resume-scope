@@ -2,9 +2,9 @@
 
 import { motion } from "framer-motion";
 
-import MatchScoreCard from "./MatchScoreCard";
 import RecommendationCard from "./RecommendationCard";
-import SkillBadge from "./SkillBadge";
+import SkillChip from "./SkillChip";
+import StatTile from "./StatTile";
 import { Recommendation } from "@/types";
 
 interface GapSkill {
@@ -23,41 +23,27 @@ interface MatchResultsProps {
   recommendations: Recommendation[];
 }
 
-function ScoreContext({ score }: { score: number }) {
-  if (score >= 80) {
-    return (
-      <p className="text-secondary leading-[1.8] text-[14px]">
-        Your resume aligns well with this role. Focus on measurable
-        impact and tailoring your narrative to stand out to reviewers.
-      </p>
-    );
-  }
+function getScoreTone(score: number): "good" | "warning" | "critical" {
+  if (score >= 70) return "good";
+  if (score >= 45) return "warning";
+  return "critical";
+}
 
-  if (score >= 60) {
-    return (
-      <p className="text-secondary leading-[1.8] text-[14px]">
-        Solid foundation with room to improve. Addressing the gaps
-        below could meaningfully increase your match score.
-      </p>
-    );
-  }
+function getScoreColor(score: number): string {
+  if (score >= 80) return "text-emerald-400";
+  if (score >= 60) return "text-yellow-400";
+  if (score >= 40) return "text-orange-400";
+  return "text-red-400";
+}
 
-  if (score >= 40) {
-    return (
-      <p className="text-secondary leading-[1.8] text-[14px]">
-        Your resume partially matches this role. Review the critical
-        gaps and consider tailoring your resume more specifically to
-        this job description.
-      </p>
-    );
+function getVerdict(score: number, criticalCount: number): string {
+  if (criticalCount > 0) {
+    return "A few critical gaps stand between you and a strong match.";
   }
-
-  return (
-    <p className="text-secondary leading-[1.8] text-[14px]">
-      Low alignment with this role. If this is a target role,
-      significant tailoring is recommended before applying.
-    </p>
-  );
+  if (score >= 80) return "Strong alignment with this role.";
+  if (score >= 60) return "Solid foundation, with room to tighten the gaps below.";
+  if (score >= 40) return "Partial match. Worth tailoring before applying.";
+  return "Limited alignment with this role as written.";
 }
 
 export default function MatchResults({
@@ -70,6 +56,16 @@ export default function MatchResults({
   summary,
   recommendations,
 }: MatchResultsProps) {
+  const totalGaps =
+    criticalGaps.length + moderateGaps.length + minorGaps.length;
+
+  const criticalSkillSet = new Set(criticalGaps.map((g) => g.skill));
+  const moderateSkillSet = new Set(moderateGaps.map((g) => g.skill));
+  const frequencyMap: Record<string, number> = {};
+  [...criticalGaps, ...moderateGaps, ...minorGaps].forEach((g) => {
+    frequencyMap[g.skill] = g.count;
+  });
+
   return (
     <section className="container-width py-20">
       <div className="max-w-6xl mx-auto">
@@ -77,7 +73,7 @@ export default function MatchResults({
         {/* HEADER */}
 
         <motion.div
-          className="mb-12"
+          className="mb-8"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
@@ -85,190 +81,173 @@ export default function MatchResults({
           <p className="text-sm uppercase tracking-[0.24em] text-muted">
             Analysis Results
           </p>
-
           <h2 className="text-4xl font-semibold mt-4">
             Resume Match Report
           </h2>
-        </motion.div>
-
-        {/* SCORE + CONTEXT ROW */}
-
-        <motion.div
-          className="grid lg:grid-cols-[0.8fr_1.2fr] gap-6 mb-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: "easeOut", delay: 0.1 }}
-        >
-          {/* SCORE */}
-
-          <div className="glass-surface rounded-[28px] p-7 flex flex-col gap-6">
-            <MatchScoreCard score={score} />
-
-            <div className="rounded-[20px] border border-white/[0.08] bg-white/[0.03] p-5">
-              <ScoreContext score={score} />
-            </div>
-          </div>
-
-          {/* SKILLS BREAKDOWN */}
-
-          <div className="glass-surface rounded-[28px] p-7 flex flex-col gap-8">
-
-            {/* MATCHED */}
-
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-muted mb-4">
-                Matched Skills
-              </p>
-
-              <div className="flex flex-wrap gap-2">
-                {matchedSkills.length > 0 ? (
-                  matchedSkills.map((skill) => (
-                    <SkillBadge key={skill} label={skill} />
-                  ))
-                ) : (
-                  <p className="text-secondary text-sm">
-                    No matched skills detected.
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* CRITICAL GAPS */}
-
-            {criticalGaps.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-red-400">
-                    Critical Gaps
-                  </p>
-                  <span className="text-xs text-muted">
-                    — appears 3+ times in the job description
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {criticalGaps.map((gap) => (
-                    <SkillBadge
-                      key={gap.skill}
-                      label={`${gap.skill} · ${gap.count}×`}
-                      muted
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* MODERATE GAPS */}
-
-            {moderateGaps.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-yellow-400">
-                    Moderate Gaps
-                  </p>
-                  <span className="text-xs text-muted">
-                    — mentioned more than once
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {moderateGaps.map((gap) => (
-                    <SkillBadge
-                      key={gap.skill}
-                      label={`${gap.skill} · ${gap.count}×`}
-                      muted
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* MINOR GAPS */}
-
-            {minorGaps.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-blue-400">
-                    Nice to Have
-                  </p>
-                  <span className="text-xs text-muted">
-                    — mentioned once
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {minorGaps.map((gap) => (
-                    <SkillBadge
-                      key={gap.skill}
-                      label={gap.skill}
-                      muted
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-          </div>
-        </motion.div>
-
-        {/* SUMMARY */}
-
-        <motion.div
-          className="glass-surface rounded-[28px] p-7 mb-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: "easeOut", delay: 0.2 }}
-        >
-          <p className="text-xs uppercase tracking-[0.2em] text-muted mb-4">
-            Full Breakdown
+          <p className="text-secondary mt-3 text-[15px]">
+            {getVerdict(score, criticalGaps.length)}
           </p>
-
-          <pre className="text-secondary text-[13px] leading-[1.9] whitespace-pre-wrap font-sans">
-            {summary}
-          </pre>
         </motion.div>
 
-        {/* RECOMMENDATIONS */}
+        {/* STAT ROW */}
 
-        {recommendations && recommendations.length > 0 && (
-          <div>
-            <motion.div
-              className="mb-6"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: "easeOut", delay: 0.28 }}
-            >
-              <p className="text-xs uppercase tracking-[0.2em] text-muted mb-1">
-                Recommendations
-              </p>
-              <p className="text-sm text-secondary">
-                Prioritized by impact on your application.
-              </p>
-            </motion.div>
+        <motion.div
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut", delay: 0.08 }}
+        >
+          <div className="col-span-2 md:col-span-1 rounded-[18px] border border-[#4B5563] bg-[#374151] px-6 py-5 flex flex-col gap-2">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted">
+              Match Score
+            </p>
+            <p className={`text-4xl font-semibold tabular-nums ${getScoreColor(score)}`}>
+              {score}%
+            </p>
+          </div>
 
-            <div className="grid md:grid-cols-3 gap-4">
-              {recommendations.map((rec, index) => (
-                <motion.div
-                  key={rec.title}
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.4,
-                    ease: "easeOut",
-                    delay: 0.35 + index * 0.08,
-                  }}
-                >
-                  <RecommendationCard
-                    title={rec.title}
-                    description={rec.description}
-                    reason={rec.reason}
-                  />
-                </motion.div>
+          <StatTile
+            label="Matched Skills"
+            value={matchedSkills.length}
+            tone="good"
+          />
+
+          <StatTile
+            label="Critical Gaps"
+            value={criticalGaps.length}
+            tone={criticalGaps.length > 0 ? "critical" : "neutral"}
+          />
+
+          <StatTile
+            label="Total Gaps"
+            value={totalGaps}
+            tone={totalGaps > 0 ? "warning" : "neutral"}
+          />
+        </motion.div>
+
+        {/* MAIN GRID */}
+
+        <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-6">
+
+          {/* SKILLS */}
+
+          <motion.div
+            className="glass-surface rounded-[24px] p-7"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: "easeOut", delay: 0.16 }}
+          >
+            <p className="text-xs uppercase tracking-[0.2em] text-muted mb-5">
+              Skills Detected in This Job Description
+            </p>
+
+            <div className="flex flex-wrap gap-2">
+              {matchedSkills.map((skill) => (
+                <SkillChip key={skill} label={skill} state="matched" />
+              ))}
+
+              {[...criticalGaps].map((gap) => (
+                <SkillChip
+                  key={gap.skill}
+                  label={gap.skill}
+                  state="critical"
+                  frequency={gap.count}
+                />
+              ))}
+
+              {[...moderateGaps, ...minorGaps].map((gap) => (
+                <SkillChip
+                  key={gap.skill}
+                  label={gap.skill}
+                  state="missing"
+                  frequency={gap.count}
+                />
               ))}
             </div>
-          </div>
-        )}
 
+            {matchedSkills.length === 0 && totalGaps === 0 && (
+              <p className="text-secondary text-sm">
+                No skills detected. Try a more detailed job description.
+              </p>
+            )}
+
+            <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-400/60" />
+                Matched
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full border border-red-400/60" />
+                Critical gap
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full border border-white/30" />
+                Missing
+              </span>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-white/[0.06]">
+              <p className="text-xs uppercase tracking-[0.2em] text-muted mb-3">
+                Summary
+              </p>
+              <p className="text-secondary text-[13.5px] leading-[1.8]">
+                {summary}
+              </p>
+            </div>
+          </motion.div>
+
+          {/* RECOMMENDATIONS */}
+
+          <div>
+            <motion.p
+              className="text-xs uppercase tracking-[0.2em] text-muted mb-1"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut", delay: 0.24 }}
+            >
+              Recommendations
+            </motion.p>
+            <motion.p
+              className="text-sm text-secondary mb-5"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut", delay: 0.26 }}
+            >
+              Prioritized by impact on your application.
+            </motion.p>
+
+            {recommendations.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {recommendations.map((rec, index) => (
+                  <motion.div
+                    key={rec.title}
+                    initial={{ opacity: 0, x: 16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{
+                      duration: 0.4,
+                      ease: "easeOut",
+                      delay: 0.3 + index * 0.08,
+                    }}
+                  >
+                    <RecommendationCard
+                      title={rec.title}
+                      description={rec.description}
+                      reason={rec.reason}
+                      rank={index + 1}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-[18px] border border-white/10 bg-white/[0.02] p-6 text-center">
+                <p className="text-secondary text-sm">
+                  No specific recommendations. Your resume looks well aligned with this role.
+                </p>
+              </div>
+            )}
+          </div>
+
+        </div>
       </div>
     </section>
   );
