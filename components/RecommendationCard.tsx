@@ -18,7 +18,7 @@ export default function RecommendationCard({
   rank,
 }: RecommendationCardProps) {
   return (
-    <div className="rounded-[18px] border border-[#4B5563] bg-[#2A3441] p-5 flex flex-col gap-3 transition-all duration-300 hover:border-white/20">
+    <div className="rounded-[18px] border border-[#4B5563] bg-[#2A3441] p-5 flex flex-col gap-3 transition-all duration-300 hover:border-white/25 hover:-translate-y-[2px]">
       <div className="flex items-start gap-3">
         <span
           className={`mt-1.5 h-1.5 w-1.5 rounded-full shrink-0 ${RANK_COLOR[rank] ?? "bg-muted"}`}
