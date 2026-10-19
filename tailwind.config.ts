@@ -1,5 +1,9 @@
 import type { Config } from "tailwindcss";
 
+/*
+  All colours resolve to the CSS variables in app/globals.css,
+  so globals.css is the single source of truth for the palette.
+*/
 const config: Config = {
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
@@ -8,12 +12,65 @@ const config: Config = {
 
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["'Inter Variable'", "Inter", "system-ui", "sans-serif"],
+      },
+
       colors: {
-        background: "#212842",
+        background: "var(--background)",
+        foreground: "var(--text-primary)",
 
-        foreground: "#F0E7D5",
+        surface: {
+          DEFAULT: "var(--surface)",
+          hover: "var(--surface-hover)",
+          raised: "var(--surface-raised)",
+        },
 
-        surface: "rgba(255,255,255,0.04)",
+        line: {
+          DEFAULT: "var(--border)",
+          soft: "var(--border-soft)",
+        },
+
+        tint: {
+          DEFAULT: "var(--tint)",
+          strong: "var(--tint-strong)",
+        },
+
+        ink: {
+          DEFAULT: "var(--text-primary)",
+          secondary: "var(--text-secondary)",
+          muted: "var(--text-muted)",
+        },
+
+        accent: {
+          DEFAULT: "var(--accent)",
+          soft: "var(--accent-soft)",
+          line: "var(--accent-line)",
+        },
+
+        good: {
+          DEFAULT: "var(--good)",
+          soft: "var(--good-soft)",
+          line: "var(--good-line)",
+        },
+
+        critical: {
+          DEFAULT: "var(--critical)",
+          soft: "var(--critical-soft)",
+          line: "var(--critical-line)",
+        },
+
+        moderate: {
+          DEFAULT: "var(--moderate)",
+          soft: "var(--moderate-soft)",
+          line: "var(--moderate-line)",
+        },
+
+        minor: {
+          DEFAULT: "var(--minor)",
+          soft: "var(--minor-soft)",
+          line: "var(--minor-line)",
+        },
       },
 
       borderRadius: {
@@ -21,8 +78,7 @@ const config: Config = {
       },
 
       boxShadow: {
-        soft:
-          "0 10px 40px rgba(0,0,0,0.18)",
+        soft: "var(--shadow-soft)",
       },
 
       transitionTimingFunction: {

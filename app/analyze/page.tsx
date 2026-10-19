@@ -131,7 +131,7 @@ function AnalyzeContent() {
         minorGaps: Array.isArray(analysis.minorGaps)
           ? analysis.minorGaps
           : [],
-        aiExplanation: analysis.aiExplanation ?? "Analysis completed.",
+        summary: analysis.summary ?? "Analysis completed.",
         recommendations: Array.isArray(analysis.recommendations)
           ? analysis.recommendations
           : [],
@@ -149,14 +149,12 @@ function AnalyzeContent() {
   }
 
   return (
-    <main className="min-h-screen">
+    <main>
 
       {/* NAVBAR */}
 
-      <nav className="container-width py-8 flex items-center justify-between">
-        <p className="text-sm uppercase tracking-[0.28em] text-muted">
-          Resume Scope
-        </p>
+      <nav className="container-width py-6 flex items-center justify-between">
+        <p className="text-base font-medium text-ink">Resume Scope</p>
 
         <button
           className="secondary-button text-sm"
@@ -166,25 +164,22 @@ function AnalyzeContent() {
         </button>
       </nav>
 
-      {/* HERO */}
+      {/* HEADER */}
 
-      <section className="container-width pt-16 md:pt-20 pb-12">
-        <div className="max-w-3xl">
-          <p className="text-sm uppercase tracking-[0.24em] text-muted fade-up">
-            Resume Analysis
-          </p>
+      <section className="container-width pt-4 md:pt-6 pb-6">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
+          <div className="max-w-2xl">
+            <h1 className="text-4xl md:text-5xl leading-[1.05] font-semibold fade-up">
+              See how well your resume fits the role.
+            </h1>
 
-          <h1 className="text-5xl md:text-6xl leading-[1.0] font-semibold mt-5 fade-up fade-delay-1">
-            See how well your resume fits the role.
-          </h1>
+            <p className="text-ink-secondary leading-[1.7] mt-4 max-w-xl fade-up fade-delay-1">
+              Upload a PDF and paste a job description to see your matched
+              skills, gaps and what to fix first.
+            </p>
+          </div>
 
-          <p className="text-base text-secondary max-w-xl leading-[1.9] mt-6 fade-up fade-delay-2">
-            Upload your resume and paste a job description.
-            We'll identify matched skills, critical gaps, and
-            actionable improvements.
-          </p>
-
-          <div className="mt-8 fade-up fade-delay-3">
+          <div className="fade-up fade-delay-2 shrink-0">
             <SampleDataButton onLoad={handleLoadSample} />
           </div>
         </div>
@@ -193,10 +188,10 @@ function AnalyzeContent() {
       {/* SAMPLE DATA BANNER */}
 
       {usingSample && (
-        <section className="container-width mb-2">
-          <div className="rounded-[14px] border border-white/10 bg-white/[0.03] px-5 py-3 flex items-center justify-between">
-            <p className="text-sm text-secondary">
-              Using sample data — a CS student resume matched against a full-stack internship JD.
+        <section className="container-width mb-4">
+          <div className="rounded-[14px] border border-line-soft bg-tint px-5 py-3 flex items-center justify-between">
+            <p className="text-sm text-ink-secondary">
+              Using sample data: a CS student resume matched against a full-stack internship JD.
             </p>
 
             <button
@@ -206,7 +201,7 @@ function AnalyzeContent() {
                 setJobDescription("");
                 setResult(null);
               }}
-              className="text-xs text-muted hover:text-secondary transition-colors ml-4 shrink-0"
+              className="text-sm text-ink-muted hover:text-ink transition-colors ml-4 shrink-0"
             >
               Clear
             </button>
@@ -232,14 +227,14 @@ function AnalyzeContent() {
         {/* INLINE ERROR */}
 
         {error && (
-          <div className="mt-6 rounded-[16px] border border-red-500/20 bg-red-500/[0.06] px-6 py-4">
-            <p className="text-sm text-red-400">{error}</p>
+          <div className="mt-6 rounded-[16px] border border-critical-line bg-critical-soft px-6 py-4" role="alert">
+            <p className="text-sm text-critical">{error}</p>
           </div>
         )}
 
         {/* ANALYZE BUTTON */}
 
-        <div className="flex justify-center mt-10">
+        <div className="flex justify-center mt-8">
           <button
             onClick={handleAnalyze}
             disabled={loading}
@@ -273,16 +268,10 @@ function AnalyzeContent() {
           criticalGaps={result.criticalGaps}
           moderateGaps={result.moderateGaps}
           minorGaps={result.minorGaps}
-          summary={result.aiExplanation}
+          summary={result.summary}
           recommendations={result.recommendations}
         />
       )}
-
-      {/* FOOTER */}
-
-      <footer className="container-width py-10 mt-20 border-t border-white/5 flex items-center justify-between text-sm text-muted">
-        <p>Madhurima Yakkala</p>
-      </footer>
 
     </main>
   );

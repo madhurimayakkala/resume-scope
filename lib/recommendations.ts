@@ -330,7 +330,7 @@ export function generateRecommendations(
       description:
         "No projects section was detected. Make sure your projects are under a heading that contains the word 'Projects' so parsers can identify it correctly.",
       reason:
-        "ATS systems and resume parsers look for section headers. Unlabeled sections are often skipped.",
+        "Resume parsers and recruiters scan for standard section headers. Unlabeled sections are often skipped.",
       priority: 72,
       category: "structure",
     });

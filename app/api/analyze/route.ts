@@ -41,10 +41,10 @@ export async function POST(request: Request) {
     const matchScore = calculateMatchScore(matchedWeight, totalWeight);
 
     /*
-      GENERATE SUMMARY
+      BUILD PLAIN-TEXT SUMMARY (template-based, no model involved)
     */
 
-    const aiExplanation = `Your resume matches ${matchScore}% of the skills detected in this job description.
+    const summary = `Your resume matches ${matchScore}% of the skills detected in this job description.
 
 Matched skills (${matchedSkills.length}): ${matchedSkills.join(", ") || "None"}
 
@@ -89,7 +89,7 @@ Minor gaps: ${
       criticalGaps,
       moderateGaps,
       minorGaps,
-      aiExplanation,
+      summary,
       recommendations,
     });
   } catch (error) {

@@ -23,13 +23,6 @@ interface MatchResultsProps {
   recommendations: Recommendation[];
 }
 
-function getScoreColor(score: number): string {
-  if (score >= 80) return "text-emerald-400";
-  if (score >= 60) return "text-yellow-400";
-  if (score >= 40) return "text-orange-400";
-  return "text-red-400";
-}
-
 function getVerdict(score: number, criticalCount: number): string {
   if (criticalCount > 0) {
     return "A few critical gaps stand between you and a strong match.";
@@ -94,9 +87,14 @@ export default function MatchResults({
       state: "critical" as const,
       frequency: gap.count,
     })),
-    ...[...moderateGaps, ...minorGaps].map((gap) => ({
+    ...moderateGaps.map((gap) => ({
       skill: gap.skill,
-      state: "missing" as const,
+      state: "moderate" as const,
+      frequency: gap.count,
+    })),
+    ...minorGaps.map((gap) => ({
+      skill: gap.skill,
+      state: "minor" as const,
       frequency: gap.count,
     })),
   ];
@@ -116,13 +114,11 @@ export default function MatchResults({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut", delay: HEADER_DELAY }}
         >
-          <p className="text-sm uppercase tracking-[0.24em] text-muted">
-            Analysis Results
-          </p>
+          <p className="eyebrow">Analysis results</p>
           <h2 className="text-4xl font-semibold mt-4">
             Resume Match Report
           </h2>
-          <p className="text-secondary mt-3 text-[15px]">
+          <p className="text-ink-secondary mt-3 text-[15px]">
             {getVerdict(score, criticalGaps.length)}
           </p>
         </motion.div>
@@ -134,7 +130,7 @@ export default function MatchResults({
             tile.isScore ? (
               <motion.div
                 key={tile.label}
-                className="col-span-2 md:col-span-1 rounded-[18px] border border-[#4B5563] bg-[#374151] px-6 py-5 flex flex-col gap-2 cursor-default"
+                className="col-span-2 md:col-span-1 rounded-[18px] border border-line bg-surface-raised px-6 py-5 flex flex-col gap-2 cursor-default"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
@@ -144,10 +140,10 @@ export default function MatchResults({
                 }}
                 whileHover={{ y: -3, scale: 1.02 }}
               >
-                <p className="text-xs uppercase tracking-[0.18em] text-muted">
+                <p className="text-sm text-ink-muted">
                   {tile.label}
                 </p>
-                <ScoreCounter score={score} colorClass={getScoreColor(score)} />
+                <ScoreCounter score={score} />
               </motion.div>
             ) : (
               <motion.div
@@ -180,8 +176,8 @@ export default function MatchResults({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut", delay: SKILLS_CARD_DELAY }}
           >
-            <p className="text-xs uppercase tracking-[0.2em] text-muted mb-5">
-              Skills Detected in This Job Description
+            <p className="label-caps mb-5">
+              Skills detected in the job description
             </p>
 
             <div className="flex flex-wrap gap-2">
@@ -206,28 +202,32 @@ export default function MatchResults({
             </div>
 
             {matchedSkills.length === 0 && totalGaps === 0 && (
-              <p className="text-secondary text-sm">
+              <p className="text-ink-secondary text-sm">
                 No skills detected. Try a more detailed job description.
               </p>
             )}
 
-            <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted">
+            <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-ink-muted">
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-400/60" />
+                <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-good-soft border border-good-line" />
                 Matched
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full border border-red-400/60" />
-                Critical gap
+                <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full border-2 border-critical-line" />
+                Critical gap (3+ mentions)
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full border border-white/30" />
-                Missing
+                <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full border border-moderate-line" />
+                Moderate gap (2)
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full border border-dashed border-minor-line" />
+                Minor gap (1)
               </span>
             </div>
 
             <motion.div
-              className="mt-8 pt-6 border-t border-white/[0.06]"
+              className="mt-8 pt-6 border-t border-line-soft"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{
@@ -236,10 +236,10 @@ export default function MatchResults({
                 delay: Math.max(recsAnimationEnd, SKILLS_CARD_DELAY + 0.4) + SUMMARY_DELAY_AFTER_RECS,
               }}
             >
-              <p className="text-xs uppercase tracking-[0.2em] text-muted mb-3">
+              <p className="label-caps mb-3">
                 Summary
               </p>
-              <p className="text-secondary text-[13.5px] leading-[1.8]">
+              <p className="text-ink-secondary text-[13.5px] leading-[1.8] whitespace-pre-line">
                 {summary}
               </p>
             </motion.div>
@@ -249,7 +249,7 @@ export default function MatchResults({
 
           <div>
             <motion.p
-              className="text-xs uppercase tracking-[0.2em] text-muted mb-1"
+              className="label-caps mb-1"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: "easeOut", delay: REC_HEADER_DELAY }}
@@ -257,7 +257,7 @@ export default function MatchResults({
               Recommendations
             </motion.p>
             <motion.p
-              className="text-sm text-secondary mb-5"
+              className="text-sm text-ink-secondary mb-5"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: "easeOut", delay: REC_HEADER_DELAY + 0.05 }}
@@ -289,12 +289,12 @@ export default function MatchResults({
               </div>
             ) : (
               <motion.div
-                className="rounded-[18px] border border-white/10 bg-white/[0.02] p-6 text-center"
+                className="rounded-[18px] border border-line-soft bg-tint p-6 text-center"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.45, ease: "easeOut", delay: REC_STAGGER_START }}
               >
-                <p className="text-secondary text-sm">
+                <p className="text-ink-secondary text-sm">
                   No specific recommendations. Your resume looks well aligned with this role.
                 </p>
               </motion.div>
@@ -311,16 +311,10 @@ export default function MatchResults({
   Counts up from 0 to the final score on mount.
   Lives inline here since it's only used in this one stat tile.
 */
-function ScoreCounter({
-  score,
-  colorClass,
-}: {
-  score: number;
-  colorClass: string;
-}) {
+function ScoreCounter({ score }: { score: number }) {
   return (
     <motion.p
-      className={`text-4xl font-semibold tabular-nums ${colorClass}`}
+      className={`text-4xl font-semibold tabular-nums text-accent`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}

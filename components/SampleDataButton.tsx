@@ -10,17 +10,17 @@ export default function SampleDataButton({
       onClick={onLoad}
       className="
         inline-flex items-center gap-2
-        text-sm text-secondary
-        border border-white/10
+        text-sm text-ink-secondary
+        border border-line-soft
         rounded-full
         px-5 py-2.5
         transition-all duration-300
-        hover:border-white/20
-        hover:bg-white/[0.04]
-        hover:text-[#F5EFE6]
+        hover:border-accent-line
+        hover:bg-tint
+        hover:text-ink
       "
     >
-      <span className="text-muted text-xs">↗</span>
+      <span aria-hidden="true" className="text-accent text-xs">↗</span>
       Try with sample data
     </button>
   );

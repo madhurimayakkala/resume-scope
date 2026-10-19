@@ -13,13 +13,6 @@ function getScoreLabel(score: number): string {
   return "Low match";
 }
 
-function getScoreColor(score: number): string {
-  if (score >= 80) return "text-emerald-400";
-  if (score >= 60) return "text-yellow-400";
-  if (score >= 40) return "text-orange-400";
-  return "text-red-400";
-}
-
 export default function MatchScoreCard({ score }: MatchScoreCardProps) {
   const [displayed, setDisplayed] = useState(0);
 
@@ -50,21 +43,21 @@ export default function MatchScoreCard({ score }: MatchScoreCardProps) {
   }, [score]);
 
   return (
-    <div className="rounded-[20px] border border-[#4B5563] bg-[#374151] p-8">
-      <p className="text-sm uppercase tracking-[0.2em] text-muted mb-6">
+    <div className="rounded-[20px] border border-line bg-surface-raised p-8">
+      <p className="text-sm text-ink-muted mb-6">
         Match Score
       </p>
 
       <div className="flex items-end gap-2">
         <h2
-          className={`text-7xl font-semibold tracking-tight tabular-nums ${getScoreColor(displayed)}`}
+          className={`text-7xl font-semibold tracking-tight tabular-nums text-accent`}
         >
           {displayed}
         </h2>
-        <span className="text-2xl text-secondary mb-3">%</span>
+        <span className="text-2xl text-ink-secondary mb-3">%</span>
       </div>
 
-      <p className="mt-4 text-secondary text-sm">
+      <p className="mt-4 text-ink-secondary text-sm">
         {getScoreLabel(score)}
       </p>
     </div>

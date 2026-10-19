@@ -25,7 +25,7 @@ export interface AnalysisResult {
   criticalGaps: GapSkill[];
   moderateGaps: GapSkill[];
   minorGaps: GapSkill[];
-  aiExplanation: string;
+  summary: string;
   recommendations: Recommendation[];
 }
 
