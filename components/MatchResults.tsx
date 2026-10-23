@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import AnimatedNumber from "./AnimatedNumber";
 import RecommendationCard from "./RecommendationCard";
-import SkillChip from "./SkillChip";
+import SummaryPanel from "./SummaryPanel";
 import StatTile from "./StatTile";
 import { Recommendation } from "@/types";
 
@@ -42,11 +42,9 @@ const HEADER_DELAY = 0;
 const STAT_ROW_DELAY = 0.1;
 const STAT_STAGGER = 0.09;
 const SKILLS_CARD_DELAY = 0.4;
-const CHIP_STAGGER = 0.025;
 const REC_HEADER_DELAY = 0.45;
 const REC_STAGGER_START = 0.55;
 const REC_STAGGER = 0.1;
-const SUMMARY_DELAY_AFTER_RECS = 0.25;
 
 export default function MatchResults({
   score,
@@ -75,32 +73,6 @@ export default function MatchResults({
       tone: totalGaps > 0 ? ("warning" as const) : ("neutral" as const),
     },
   ];
-
-  const allChips = [
-    ...matchedSkills.map((skill) => ({
-      skill,
-      state: "matched" as const,
-      frequency: undefined,
-    })),
-    ...criticalGaps.map((gap) => ({
-      skill: gap.skill,
-      state: "critical" as const,
-      frequency: gap.count,
-    })),
-    ...moderateGaps.map((gap) => ({
-      skill: gap.skill,
-      state: "moderate" as const,
-      frequency: gap.count,
-    })),
-    ...minorGaps.map((gap) => ({
-      skill: gap.skill,
-      state: "minor" as const,
-      frequency: gap.count,
-    })),
-  ];
-
-  const recsAnimationEnd =
-    REC_STAGGER_START + recommendations.length * REC_STAGGER;
 
   return (
     <section className="container-width py-20">
@@ -168,82 +140,17 @@ export default function MatchResults({
 
         <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-6">
 
-          {/* SKILLS */}
+          {/* SUMMARY + SKILLS */}
 
-          <motion.div
-            className="glass-surface rounded-[24px] p-7"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut", delay: SKILLS_CARD_DELAY }}
-          >
-            <p className="label-caps mb-5">
-              Skills detected in the job description
-            </p>
-
-            <div className="flex flex-wrap gap-2">
-              {allChips.map((chip, index) => (
-                <motion.div
-                  key={chip.skill}
-                  initial={{ opacity: 0, scale: 0.92 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{
-                    duration: 0.3,
-                    ease: "easeOut",
-                    delay: SKILLS_CARD_DELAY + 0.15 + index * CHIP_STAGGER,
-                  }}
-                >
-                  <SkillChip
-                    label={chip.skill}
-                    state={chip.state}
-                    frequency={chip.frequency}
-                  />
-                </motion.div>
-              ))}
-            </div>
-
-            {matchedSkills.length === 0 && totalGaps === 0 && (
-              <p className="text-ink-secondary text-sm">
-                No skills detected. Try a more detailed job description.
-              </p>
-            )}
-
-            <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-ink-muted">
-              <span className="inline-flex items-center gap-1.5">
-                <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-good-soft border border-good-line" />
-                Matched
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full border-2 border-critical-line" />
-                Critical gap (3+ mentions)
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full border border-moderate-line" />
-                Moderate gap (2)
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full border border-dashed border-minor-line" />
-                Minor gap (1)
-              </span>
-            </div>
-
-            <motion.div
-              className="mt-8 pt-6 border-t border-line-soft"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{
-                duration: 0.5,
-                ease: "easeOut",
-                delay: Math.max(recsAnimationEnd, SKILLS_CARD_DELAY + 0.4) + SUMMARY_DELAY_AFTER_RECS,
-              }}
-            >
-              <p className="label-caps mb-3">
-                Summary
-              </p>
-              <p className="text-ink-secondary text-[13.5px] leading-[1.8] whitespace-pre-line">
-                {summary}
-              </p>
-            </motion.div>
-          </motion.div>
+          <SummaryPanel
+            score={score}
+            matchedSkills={matchedSkills}
+            criticalGaps={criticalGaps}
+            moderateGaps={moderateGaps}
+            minorGaps={minorGaps}
+            summaryText={summary}
+            delay={SKILLS_CARD_DELAY}
+          />
 
           {/* RECOMMENDATIONS */}
 
